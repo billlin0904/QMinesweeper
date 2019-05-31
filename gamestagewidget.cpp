@@ -8,6 +8,8 @@ GameStageWidget::GameStageWidget(QWidget *parent)
 }
 
 void GameStageWidget::create(int _M, int _N, int _max_mine) {
+    emit stop();
+
     layout.reset();
 
     layout.reset(new QGridLayout(this));
@@ -45,6 +47,8 @@ void GameStageWidget::create(int _M, int _N, int _max_mine) {
             mines[x][y]->setNearMineCount(mine_count);
         }
     }
+
+    emit start(max_mine);
 }
 
 void GameStageWidget::onDug(int x, int y) {

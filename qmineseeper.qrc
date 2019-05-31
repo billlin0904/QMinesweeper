@@ -1,5 +1,9 @@
 <RCC>
     <qresource prefix="/Resources/img">
         <file>Resources/mine.png</file>
+        <file>Resources/emoji_3.png</file>
+        <file>Resources/emoji_0.png</file>
+        <file>Resources/emoji_1.png</file>
+        <file>Resources/emoji_2.png</file>
     </qresource>
 </RCC>

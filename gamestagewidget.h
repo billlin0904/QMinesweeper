@@ -15,6 +15,13 @@ public:
 
     void create(int _M, int _N, int _max_mine);
 
+signals:
+    void start(int max_mine);
+
+    void mineCountChanged(int count);
+
+    void stop();
+
 private:
     void resizeEvent(QResizeEvent *) override;
 

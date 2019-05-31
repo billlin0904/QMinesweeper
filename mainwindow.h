@@ -2,6 +2,8 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
+#include <QTimer>
+#include <QTime>
 
 namespace Ui {
 class MainWindow;
@@ -16,6 +18,8 @@ public:
     ~MainWindow();
 
 private:
+    QTimer timer;
+    QTime base_time;
     Ui::MainWindow *ui;
 };
 
