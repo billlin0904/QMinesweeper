@@ -1,74 +1,88 @@
 #pragma once
 
-#include <QWidget>
+#include <QFrame>
 #include <QPixmap>
 
-class Mine : public QWidget {
+enum MineStatus {
+	STATUS_BANK = 0,
+	STATUS_NUM1,
+	STATUS_NUM2,
+	STATUS_NUM3,
+	STATUS_NUM4,
+	STATUS_NUM5,
+	STATUS_NUM6,
+	STATUS_NUM7,
+	STATUS_NUM8,
+
+	STATUS_INIT,
+	STATUS_FLAG,
+	STATUS_MINE,
+};
+
+class Mine : public QFrame {
     Q_OBJECT
 public:
-    enum Status {
-        STATUS_BANK = 0,
-        STATUS_NUM1,
-        STATUS_NUM2,
-        STATUS_NUM3,
-        STATUS_NUM4,
-        STATUS_NUM5,
-        STATUS_NUM6,
-        STATUS_NUM7,
-        STATUS_NUM8,
-
-        STATUS_INIT,
-        STATUS_FLAG,
-        STATUS_MINE,
-    };
-
     explicit Mine(int x, int y, QWidget *parent = nullptr);
 
     void setDowned(bool down);
 
-    void setMine(bool _is_mine);
-
-    void paintEvent(QPaintEvent *) override;
+    void setMine(bool _is_mine);    
 
     bool isDowned() const;
 
     bool isMine() const;
 
-    int getX() const {
-        return x;
-    }
+	bool isFlag() const;
 
-    int getY() const {
-        return y;
-    }
+	int getX() const;
 
-    Status getStatus() const {
-        return status;
-    }
+	int getY() const;
 
-    void setStatus(Status _status);
+	MineStatus getStatus() const;
 
-    void setNearMineCount(int count) {
+    void setStatus(MineStatus _status);
+
+    void setNearMineCount(MineStatus count) {
         near_mine_count = count;
     }
 
-    int getNearMineCount() const {
-        return near_mine_count;
-    }
+	MineStatus getNearMineCount() const;
 
 signals:
     void dug(int x, int y);
 
 private:
+	void paintEvent(QPaintEvent*) override;
     void mousePressEvent(QMouseEvent *) override;
     void mouseReleaseEvent(QMouseEvent *) override;
 
 private:
     bool downed;
     bool is_mine;
-    int near_mine_count;
+	MineStatus near_mine_count;
     int x;
     int y;
-    Status status;
+    MineStatus status;
     QPixmap mine_img;
+	QPixmap flag_img;
 };
+
+inline MineStatus Mine::getStatus() const {
+	return status;
+}
+
+inline MineStatus Mine::getNearMineCount() const {
+	return static_cast<MineStatus>(near_mine_count);
+}
+
+inline int Mine::getX() const {
+	return x;
+}
+
+inline int Mine::getY() const {
+	return y;
+}
+
+inline bool Mine::isFlag() const {
+	return status == STATUS_FLAG;
+}

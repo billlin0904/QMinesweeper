@@ -9,8 +9,7 @@ namespace Ui {
 class MainWindow;
 }
 
-class MainWindow : public QMainWindow
-{
+class MainWindow : public QMainWindow {
     Q_OBJECT
 
 public:
@@ -18,8 +17,13 @@ public:
     ~MainWindow();
 
 private:
+	void setEnmoji(int i);
+
     QTimer timer;
     QTime base_time;
+	QIcon enmoji0;
+	QIcon enmoji1;
+	QIcon enmoji2;
     Ui::MainWindow *ui;
 };
 

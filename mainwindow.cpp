@@ -1,45 +1,57 @@
 #include <QTime>
+#include <QMessageBox>
 
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 
-MainWindow::MainWindow(QWidget *parent) :
-    QMainWindow(parent),
-    ui(new Ui::MainWindow)
-{
-    ui->setupUi(this);
+MainWindow::MainWindow(QWidget *parent)
+	: QMainWindow(parent)
+	, ui(new Ui::MainWindow) {
+
+	QApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
+	QApplication::setAttribute(Qt::AA_UseHighDpiPixmaps);
+
+	ui->setupUi(this);
 
     setWindowTitle("QMinesweeper");
-    ui->stage->create(9, 9, 10);
 
-    setContextMenuPolicy(Qt::CustomContextMenu);
-    QObject::connect(this, &MainWindow::customContextMenuRequested, [this](const QPoint &pos) {
-        QMenu menu(this);
-        QAction action1("8 * 8", this);
-        QObject::connect(&action1, &QAction::triggered, [this]() {
-            ui->stage->create(8, 8, 10);
-        });
+	auto action1 = new QAction(tr("8 * 8 (Beginer)"), this);
+	QObject::connect(action1, &QAction::triggered, [this]() {
+		ui->stage->create(8, 8, 10);
+		});
 
-        QAction action2("16 * 16", this);
-        QObject::connect(&action2, &QAction::triggered, [this]() {
-            ui->stage->create(16, 16, 40);
-        });
+	auto action2 = new QAction(tr("16 * 16 (Intermediate)"), this);
+	QObject::connect(action2, &QAction::triggered, [this]() {
+		ui->stage->create(16, 16, 40);
+		});
 
-        QAction action3("16 * 30", this);
-        QObject::connect(&action3, &QAction::triggered, [this]() {
-            ui->stage->create(30, 16, 99);
-        });
+	auto action3 = new QAction(tr("16 * 30 (Export)"), this);
+	QObject::connect(action3, &QAction::triggered, [this]() {
+		ui->stage->create(30, 16, 99);
+		});
 
-        menu.addAction(&action1);
-        menu.addAction(&action2);
-        menu.addAction(&action3);
-        menu.exec(mapToGlobal(pos));
-    });
+	auto level_menu = new QMenu(tr("New Game"));
+	level_menu->addAction(action1);
+	level_menu->addAction(action2);
+	level_menu->addAction(action3);
 
-    QIcon default_enmoji(":/Resources/img/Resources/emoji_1.png");
-    ui->emojiButton->setStyleSheet(" QPushButton#emojiButton { border:none; } ");
+	auto help_menu = new QMenu(tr("Help"));
+	auto about_action = new QAction(tr("About"), this);
+	QObject::connect(about_action, &QAction::triggered, [this]() {
+		QMessageBox::about(this, "QMinesweeper", "<a href='https://github.com/billlin0904/QMinesweeper'>GitHub</a>");
+		});
+	help_menu->addAction(about_action);
+
+	ui->menuBar->addAction(level_menu->menuAction());
+	ui->menuBar->addAction(help_menu->menuAction());
+
+	enmoji0 = QIcon(":/Resources/img/Resources/emoji_0.png");
+	enmoji1 = QIcon(":/Resources/img/Resources/emoji_1.png");
+	enmoji2 = QIcon(":/Resources/img/Resources/emoji_2.png");
+
+    ui->emojiButton->setStyleSheet("QPushButton#emojiButton { border: none; }");
     ui->emojiButton->setIconSize(ui->emojiButton->size());
-    ui->emojiButton->setIcon(default_enmoji);
+	setEnmoji(1);
 
     ui->timeLcdNumber->setDigitCount(5);
     ui->timeLcdNumber->setMode(QLCDNumber::Dec);
@@ -62,15 +74,44 @@ MainWindow::MainWindow(QWidget *parent) :
         ui->mineCountLcdNumber->display(QString::number(max_mine));
         base_time = QTime::currentTime();
         timer.start();
+		setEnmoji(1);
     });
+
+	QObject::connect(ui->stage, &GameStageWidget::mineCountChanged, [this](int mine_count) {
+		ui->mineCountLcdNumber->display(QString::number(mine_count));
+		if (mine_count <= ui->stage->getMaxMine() / 4) {
+			setEnmoji(3);
+		} else if (mine_count <= ui->stage->getMaxMine() / 3) {
+			setEnmoji(2);
+		} else if (mine_count <= ui->stage->getMaxMine() / 2) {
+			setEnmoji(1);
+		}
+	});
 
     QObject::connect(ui->stage, &GameStageWidget::stop, [this]() {
         ui->timeLcdNumber->display("00:00");
         timer.stop();
     });
+
+	ui->stage->create(8, 8, 10);
+
+	setStyleSheet("#centralWidget { background-color: white; }");
 }
 
-MainWindow::~MainWindow()
-{
+void MainWindow::setEnmoji(int i) {
+	switch (i) {
+	case 0:
+		ui->emojiButton->setIcon(enmoji0);
+		break;
+	case 1:
+		ui->emojiButton->setIcon(enmoji1);
+		break;
+	case 2:
+		ui->emojiButton->setIcon(enmoji2);
+		break;
+	}
+}
+
+MainWindow::~MainWindow() {
     delete ui;
 }

@@ -1,18 +1,18 @@
 #include <QPainter>
 #include <QMouseEvent>
 #include <QDebug>
-#include <QApplication>
+#include <QStyleOption>
 
 #include "mine.h"
 
 Mine::Mine(int x, int y, QWidget *parent)
-    : QWidget(parent)
+    : QFrame(parent)
     , downed(false)
     , is_mine(false)
-    , near_mine_count(0)
+    , near_mine_count(STATUS_BANK)
     , x(x)
     , y(y)
-    , status(STATUS_INIT) {
+    , status(STATUS_INIT) {	
 }
 
 void Mine::setMine(bool _is_mine) {
@@ -32,7 +32,7 @@ bool Mine::isDowned() const {
     return downed;
 }
 
-void Mine::setStatus(Status _status) {
+void Mine::setStatus(MineStatus _status) {
     status = _status;
     qDebug() << "Status:" << status;
     update();
@@ -45,40 +45,51 @@ void Mine::paintEvent(QPaintEvent *) {
 
     if (downed) {
         painter.fillRect(0, 0, width() - 1, height() - 1, Qt::lightGray);
-
-        auto font = QApplication::font();
-        font.setPixelSize(rc.height());
-        painter.setFont(font);
-
         if (status >= STATUS_NUM1 && status <= STATUS_NUM8) {
-            static QColor color_table [] = {
-                QColor(),
-                QColor(40,  131, 40),
-                QColor(30,  144, 255),
-                QColor(0,   0,   255),
-                QColor(255, 0,   255),
-                QColor(212, 96,  96),
-                QColor(255, 165, 0),
-                QColor(136, 32,  240),
-                QColor(255, 0,   0)
-            };
-            painter.setPen(color_table[status]);
-            painter.drawText(rc, Qt::AlignCenter, QString::number(status), &rc);
-        }
-    }    
+			static QString path_table[] = {
+				"",
+				":/Resources/img/Resources/num1.png",
+				":/Resources/img/Resources/num2.png",
+				":/Resources/img/Resources/num3.png",
+				":/Resources/img/Resources/num4.png",
+				":/Resources/img/Resources/num5.png",
+				":/Resources/img/Resources/num6.png",
+				":/Resources/img/Resources/num7.png",
+				":/Resources/img/Resources/num8.png",
+			};
+			painter.drawPixmap(rc, QPixmap(path_table[status]));
+		}
+    }
+
+	if (status == STATUS_FLAG) {
+		if (flag_img.isNull()) {
+			flag_img = QPixmap(":/Resources/img/Resources/flag.png");
+		}
+		painter.drawPixmap(rc, flag_img);
+	}
 
     painter.setPen(QPen(QBrush(Qt::gray), 1));
     painter.drawRoundRect(0, 0, width() - 1, height() - 1, 2, 2);
 
     if (status == STATUS_MINE) {
         painter.drawPixmap(rc, mine_img);
-    }
+	} else if (status == STATUS_BANK) {
+		painter.drawPixmap(rc, QPixmap(":/Resources/img/Resources/bank.png"));
+	} else if (status == STATUS_INIT) {
+		painter.drawPixmap(rc, QPixmap(":/Resources/img/Resources/init.png"));
+	}
+
+//	QStyleOption opt;
+//	opt.init(this);
+//	style()->drawPrimitive(QStyle::PE_Widget, &opt, &painter, this);
 }
 
 void Mine::mousePressEvent(QMouseEvent *event) {
-    if (event->button()==Qt::LeftButton) {
+    if (event->button() == Qt::LeftButton) {
         emit dug(x, y);
-    }
+	} else if (event->button() == Qt::RightButton) {
+		setStatus(STATUS_FLAG);
+	}
 }
 
 void Mine::mouseReleaseEvent(QMouseEvent *) {

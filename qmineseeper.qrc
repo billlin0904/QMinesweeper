@@ -1,9 +1,19 @@
 <RCC>
     <qresource prefix="/Resources/img">
         <file>Resources/mine.png</file>
-        <file>Resources/emoji_3.png</file>
+        <file>Resources/flag.png</file>
+        <file>Resources/num1.png</file>
+        <file>Resources/num2.png</file>
+        <file>Resources/num3.png</file>
+        <file>Resources/num4.png</file>
+        <file>Resources/num5.png</file>
+        <file>Resources/num6.png</file>
+        <file>Resources/num7.png</file>
+        <file>Resources/num8.png</file>
         <file>Resources/emoji_0.png</file>
         <file>Resources/emoji_1.png</file>
         <file>Resources/emoji_2.png</file>
+        <file>Resources/bank.png</file>
+        <file>Resources/init.png</file>
     </qresource>
 </RCC>
