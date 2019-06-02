@@ -45,9 +45,9 @@ MainWindow::MainWindow(QWidget* parent)
 	ui->menuBar->addAction(level_menu->menuAction());
 	ui->menuBar->addAction(help_menu->menuAction());
 
-	enmoji0 = QIcon(":/Resources/img/Resources/emoji_0.png");
-	enmoji1 = QIcon(":/Resources/img/Resources/emoji_1.png");
-	enmoji2 = QIcon(":/Resources/img/Resources/emoji_2.png");
+	enmoji0 = QIcon(":/Resources/Resources/imgs/emoji_0.png");
+	enmoji1 = QIcon(":/Resources/Resources/imgs/emoji_1.png");
+	enmoji2 = QIcon(":/Resources/Resources/imgs/emoji_2.png");
 
 	ui->emojiButton->setStyleSheet("QPushButton#emojiButton { border: none; }");
 	ui->emojiButton->setIconSize(ui->emojiButton->size());
@@ -98,7 +98,7 @@ MainWindow::MainWindow(QWidget* parent)
 
 	QObject::connect(ui->stage, &GameStageWidget::gameOver, [this]() {
 		setEnmoji(0);
-		QMessageBox::warning(this, "QMinesweeper", tr("Game Over"), QMessageBox::Yes);		
+		QMessageBox::information(this, "QMinesweeper", tr("Game Over"), QMessageBox::Yes);		
 		ui->stage->restart();
 		});
 

@@ -7,6 +7,7 @@
 #include <QWidget>
 #include <QGridLayout>
 
+#include "soundmanager.h"
 #include "mine.h"
 
 class GameStageWidget : public QFrame {
@@ -36,7 +37,9 @@ signals:
 private:
 	void resizeEvent(QResizeEvent*) override;
 
-	void randomMine();
+	void randomMine(const std::vector<const Mine*> *near_mine = nullptr);
+
+	void calcNearMineCount();
 
 	std::vector<const Mine*> getNearMine(int x, int y) const;
 
@@ -49,6 +52,7 @@ private:
 	int max_mine;
 	int remain_mine;
 	int move;
+	SoundManager manger;
 	std::unique_ptr<QGridLayout> layout;
 	std::vector<std::vector<std::unique_ptr<Mine>>> mines;
 };

@@ -8,6 +8,9 @@ GameStageWidget::GameStageWidget(QWidget* parent)
 	, max_mine(0)
 	, remain_mine(0)
 	, move(0) {
+	setStyleSheet("#stage { background-color: white; }");	
+	manger.addSound(QUrl::fromLocalFile("./Resources/sounds/click.wav"));
+	manger.setMuted(false);
 }
 
 void GameStageWidget::restart() {
@@ -48,10 +51,14 @@ void GameStageWidget::create(int _M, int _N, int _max_mine) {
 		mines[x] = std::move(temp);
 	}
 
-	setStyleSheet("#stage { background-color: white; }");
-
 	randomMine();
+	calcNearMineCount();
 
+	emit start(max_mine);
+	emit mineCountChanged(remain_mine);
+}
+
+void GameStageWidget::calcNearMineCount() {
 	for (auto x = 0; x < N; ++x) {
 		for (auto y = 0; y < M; ++y) {
 			auto mine_count = 0;
@@ -63,37 +70,42 @@ void GameStageWidget::create(int _M, int _N, int _max_mine) {
 			mines[x][y]->setNearMineCount(static_cast<MineStatus>(mine_count));
 		}
 	}
-
-	emit start(max_mine);
-	emit mineCountChanged(remain_mine);
 }
 
 void GameStageWidget::onDug(int x, int y) {
 	dug(x, y);
 }
 
-void GameStageWidget::dug(int x, int y) {
+void GameStageWidget::dug(int x, int y) {	
+	manger.play();
+
 	auto& mine = mines[x][y];
+
 	if (mine->isMine()) {
 		mine->setDowned(true);
 		emit gameOver();
 		return;
 	}
+
 	auto is_mine = mine->getStatus() == STATUS_MINE;
 	mine->setDowned(true);
+
 	if (!is_mine && mine->getStatus() == STATUS_MINE) {
 		--remain_mine;
 		emit mineCountChanged(remain_mine);
 	}
+
 	if (mine->getStatus() != STATUS_INIT) {
 		return;
 	}
+
 	mine->setStatus(mine->getNearMineCount());
 	if (mine->getStatus() == STATUS_BANK) {
 		for (auto mine : getNearMine(x, y)) {
 			dug(mine->getX(), mine->getY());
 		}
 	}
+
 	emit moveChanged(++move);
 }
 
@@ -135,7 +147,7 @@ std::vector<const Mine*> GameStageWidget::getNearMine(int x, int y) const {
 	return near_mines;
 }
 
-void GameStageWidget::randomMine() {
+void GameStageWidget::randomMine(const std::vector<const Mine*>* skip_mine) {
 	RNG random;
 
 	for (auto i = 0, x = 0, y = 0; i < max_mine; ++i) {
