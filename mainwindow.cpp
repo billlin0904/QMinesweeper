@@ -4,7 +4,7 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 
-MainWindow::MainWindow(QWidget *parent)
+MainWindow::MainWindow(QWidget* parent)
 	: QMainWindow(parent)
 	, ui(new Ui::MainWindow) {
 
@@ -13,21 +13,21 @@ MainWindow::MainWindow(QWidget *parent)
 
 	ui->setupUi(this);
 
-    setWindowTitle("QMinesweeper");
+	setWindowTitle("QMinesweeper");
 
-	auto action1 = new QAction(tr("8 * 8 (Beginer)"), this);
+	auto action1 = new QAction(tr("Beginer"), this);
 	QObject::connect(action1, &QAction::triggered, [this]() {
 		ui->stage->create(8, 8, 10);
 		});
 
-	auto action2 = new QAction(tr("16 * 16 (Intermediate)"), this);
+	auto action2 = new QAction(tr("Intermediate"), this);
 	QObject::connect(action2, &QAction::triggered, [this]() {
 		ui->stage->create(16, 16, 40);
 		});
 
-	auto action3 = new QAction(tr("16 * 30 (Export)"), this);
+	auto action3 = new QAction(tr("Export"), this);
 	QObject::connect(action3, &QAction::triggered, [this]() {
-		ui->stage->create(30, 16, 99);
+		ui->stage->create(30, 24, 99);
 		});
 
 	auto level_menu = new QMenu(tr("New Game"));
@@ -49,49 +49,58 @@ MainWindow::MainWindow(QWidget *parent)
 	enmoji1 = QIcon(":/Resources/img/Resources/emoji_1.png");
 	enmoji2 = QIcon(":/Resources/img/Resources/emoji_2.png");
 
-    ui->emojiButton->setStyleSheet("QPushButton#emojiButton { border: none; }");
-    ui->emojiButton->setIconSize(ui->emojiButton->size());
+	ui->emojiButton->setStyleSheet("QPushButton#emojiButton { border: none; }");
+	ui->emojiButton->setIconSize(ui->emojiButton->size());
 	setEnmoji(1);
 
-    ui->timeLcdNumber->setDigitCount(5);
-    ui->timeLcdNumber->setMode(QLCDNumber::Dec);
-    ui->timeLcdNumber->setSegmentStyle(QLCDNumber::Flat);
+	ui->timeLcdNumber->setDigitCount(5);
+	ui->timeLcdNumber->setMode(QLCDNumber::Dec);
+	ui->timeLcdNumber->setSegmentStyle(QLCDNumber::Flat);
 
-    base_time = QTime::currentTime();
+	base_time = QTime::currentTime();
 
-    ui->timeLcdNumber->display("00:00");
-    QObject::connect(&timer, &QTimer::timeout, [this]() {
-        auto curr_time = QTime::currentTime();
-        int t = base_time.msecsTo(curr_time);
-        QTime show_time(0,0,0,0);
-        show_time = show_time.addMSecs(t);
-        ui->timeLcdNumber->display(show_time.toString("mm:ss"));
-    });
+	ui->timeLcdNumber->display("00:00");
+	QObject::connect(&timer, &QTimer::timeout, [this]() {
+		auto curr_time = QTime::currentTime();
+		int t = base_time.msecsTo(curr_time);
+		QTime show_time(0, 0, 0, 0);
+		show_time = show_time.addMSecs(t);
+		ui->timeLcdNumber->display(show_time.toString("mm:ss"));
+		});
 
-    timer.setInterval(1000);
+	timer.setInterval(1000);
 
-    QObject::connect(ui->stage, &GameStageWidget::start, [this](int max_mine) {
-        ui->mineCountLcdNumber->display(QString::number(max_mine));
-        base_time = QTime::currentTime();
-        timer.start();
+	QObject::connect(ui->stage, &GameStageWidget::start, [this](int max_mine) {
+		ui->mineCountLcdNumber->display(QString::number(max_mine));
+		base_time = QTime::currentTime();
+		timer.start();
 		setEnmoji(1);
-    });
+		});
+
+	QObject::connect(ui->stage, &GameStageWidget::moveChanged, [this](int move) {
+		ui->moveLcdNumber->display(QString::number(move));
+		});
 
 	QObject::connect(ui->stage, &GameStageWidget::mineCountChanged, [this](int mine_count) {
 		ui->mineCountLcdNumber->display(QString::number(mine_count));
 		if (mine_count <= ui->stage->getMaxMine() / 4) {
-			setEnmoji(3);
-		} else if (mine_count <= ui->stage->getMaxMine() / 3) {
 			setEnmoji(2);
-		} else if (mine_count <= ui->stage->getMaxMine() / 2) {
+		}
+		else if (mine_count <= ui->stage->getMaxMine() / 3) {
 			setEnmoji(1);
 		}
-	});
+		});
 
-    QObject::connect(ui->stage, &GameStageWidget::stop, [this]() {
-        ui->timeLcdNumber->display("00:00");
-        timer.stop();
-    });
+	QObject::connect(ui->stage, &GameStageWidget::stop, [this]() {
+		ui->timeLcdNumber->display("00:00");
+		timer.stop();		
+		});
+
+	QObject::connect(ui->stage, &GameStageWidget::gameOver, [this]() {
+		setEnmoji(0);
+		QMessageBox::warning(this, "QMinesweeper", tr("Game Over"), QMessageBox::Yes);		
+		ui->stage->restart();
+		});
 
 	ui->stage->create(8, 8, 10);
 
@@ -113,5 +122,5 @@ void MainWindow::setEnmoji(int i) {
 }
 
 MainWindow::~MainWindow() {
-    delete ui;
+	delete ui;
 }

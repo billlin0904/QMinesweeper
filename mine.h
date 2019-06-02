@@ -20,17 +20,17 @@ enum MineStatus {
 };
 
 class Mine : public QFrame {
-    Q_OBJECT
+	Q_OBJECT
 public:
-    explicit Mine(int x, int y, QWidget *parent = nullptr);
+	explicit Mine(int x, int y, QWidget* parent = nullptr);
 
-    void setDowned(bool down);
+	void setDowned(bool down);
 
-    void setMine(bool _is_mine);    
+	void setMine(bool _is_mine);
 
-    bool isDowned() const;
+	bool isDowned() const;
 
-    bool isMine() const;
+	bool isMine() const;
 
 	bool isFlag() const;
 
@@ -40,30 +40,30 @@ public:
 
 	MineStatus getStatus() const;
 
-    void setStatus(MineStatus _status);
+	void setStatus(MineStatus _status);
 
-    void setNearMineCount(MineStatus count) {
-        near_mine_count = count;
-    }
+	void setNearMineCount(MineStatus count) {
+		near_mine_count = count;
+	}
 
 	MineStatus getNearMineCount() const;
 
 signals:
-    void dug(int x, int y);
+	void dug(int x, int y);
 
 private:
 	void paintEvent(QPaintEvent*) override;
-    void mousePressEvent(QMouseEvent *) override;
-    void mouseReleaseEvent(QMouseEvent *) override;
+	void mousePressEvent(QMouseEvent*) override;
+	void mouseReleaseEvent(QMouseEvent*) override;
 
 private:
-    bool downed;
-    bool is_mine;
+	bool downed;
+	bool is_mine;
 	MineStatus near_mine_count;
-    int x;
-    int y;
-    MineStatus status;
-    QPixmap mine_img;
+	int x;
+	int y;
+	MineStatus status;
+	QPixmap mine_img;
 	QPixmap flag_img;
 };
 

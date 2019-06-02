@@ -1,0 +1,15 @@
+﻿################################################################################
+# This .gitignore file was automatically created by Microsoft(R) Visual Studio.
+################################################################################
+
+/release
+/debug
+/.vs/QMinesweeper/v16
+/x64
+/ui_preferences.h
+/ui_mainwindow.h
+/QMinesweeper.vcxproj.user
+/QMinesweeper.vcxproj.filters
+/QMinesweeper.vcxproj
+/QMinesweeper.sln
+/.qmake.stash
