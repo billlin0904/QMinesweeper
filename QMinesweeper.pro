@@ -4,7 +4,7 @@
 #
 #-------------------------------------------------
 
-QT       += core gui
+QT       += core gui multimedia
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
@@ -29,11 +29,13 @@ SOURCES += \
         mainwindow.cpp \
     gamestagewidget.cpp \
     rng.cpp \
-    mime.cpp
+    soundmanager.cpp \
+    mine.cpp
 
 HEADERS += \
         mainwindow.h \
     gamestagewidget.h \
+    soundmanager.h \
     rng.h \
     mine.h
 
