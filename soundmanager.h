@@ -1,23 +1,26 @@
 #pragma once
 
+#include <memory>
+#include <vector>
+#include <QUrl>
 #include <QObject>
-#include <QMediaPlaylist>
-#include <QMediaPlayer>
 
 class SoundManager : public QObject {
 	Q_OBJECT
 public:
-	explicit SoundManager(bool is_loop = false, QObject* parent = nullptr);
+    explicit SoundManager(QObject* parent = nullptr);
 
-	void addSound(const QUrl& path);
+    ~SoundManager();
+
+    void addSound(const QUrl& path, bool is_loop);
 
 public slots:
 	void play(int index);
 
-	void setMuted(bool status);
+    void setMuted(int index, bool status);
 
 private:
-	QMediaPlaylist* playlist;
-	QMediaPlayer* player;
+    class SoundPlayer;
+    std::vector<std::unique_ptr<SoundPlayer>> playlist;
 };
 
