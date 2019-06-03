@@ -66,7 +66,7 @@ void Mine::paintEvent(QPaintEvent*) {
 	auto rc = rect();
 
 	if (downed) {
-		painter.fillRect(0, 0, width() - 1, height() - 1, Qt::lightGray);
+		//painter.fillRect(0, 0, width() - 1, height() - 1, Qt::lightGray);
 		if (status >= STATUS_NUM1 && status <= STATUS_NUM8) {
 			static QString path_table[] = {
 				"",
