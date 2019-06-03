@@ -1,18 +1,38 @@
 #include <QPainter>
 #include <QMouseEvent>
 #include <QDebug>
-#include <QStyleOption>
-
 #include "mine.h"
 
+static QPixmap scaledPixmap(const QPixmap& src, int width, int height) {
+	return src.scaled(width, (height == 0 ? width : height),
+		Qt::IgnoreAspectRatio, Qt::SmoothTransformation);
+}
+
+static QPixmap generatePixmap(const QPixmap& src, const int& radius) {
+	QPixmap pixmap = scaledPixmap(src, radius * 2, radius * 2);
+	QPixmap dest(2 * radius, 2 * radius);
+	dest.fill(Qt::transparent);
+	QPainter painter(&dest);
+	painter.setRenderHints(QPainter::Antialiasing, true);
+	painter.setRenderHints(QPainter::SmoothPixmapTransform, true);
+	QPainterPath path;
+	path.addEllipse(0, 0, 2 * radius, 2 * radius);
+	painter.setClipPath(path);
+	painter.drawPixmap(0, 0, 2 * radius, 2 * radius, pixmap);
+	return dest;
+}
+
 Mine::Mine(int x, int y, QWidget* parent)
-	: QFrame(parent)
+	: QLabel(parent)
 	, downed(false)
 	, is_mine(false)
 	, near_mine_count(STATUS_BANK)
 	, x(x)
 	, y(y)
 	, status(STATUS_INIT) {
+	setFrameStyle(QFrame::NoFrame);
+	setObjectName("mine");
+	//setStyleSheet("border-radius: 15px");
 }
 
 void Mine::setMine(bool _is_mine) {
@@ -41,6 +61,7 @@ void Mine::setStatus(MineStatus _status) {
 
 void Mine::paintEvent(QPaintEvent*) {
 	QPainter painter(this);
+	painter.setRenderHint(QPainter::Antialiasing);
 
 	auto rc = rect();
 
@@ -58,7 +79,8 @@ void Mine::paintEvent(QPaintEvent*) {
 				":/Resources/Resources/imgs/num7.png",
 				":/Resources/Resources/imgs/num8.png",
 			};
-			painter.drawPixmap(rc, QPixmap(path_table[status]));
+			painter.drawPixmap(rc,
+				QPixmap(path_table[status]));
 		}
 	}
 
@@ -69,8 +91,8 @@ void Mine::paintEvent(QPaintEvent*) {
 		painter.drawPixmap(rc, flag_img);
 	}
 
-	painter.setPen(QPen(QBrush(Qt::gray), 1));
-	painter.drawRoundRect(0, 0, width() - 1, height() - 1, 2, 2);
+	//painter.setPen(QPen(QBrush(Qt::gray), 1));
+	//painter.drawRoundRect(0, 0, width() - 1, height() - 1, 2, 2);
 
 	if (status == STATUS_MINE) {
 		painter.drawPixmap(rc, mine_img);

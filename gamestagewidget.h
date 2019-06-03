@@ -45,7 +45,7 @@ private:
 
 	void onDug(int x, int y);
 
-	void dug(int x, int y);
+	void dug(int x, int y, bool play_sound = true);
 
 	int N;
 	int M;

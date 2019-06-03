@@ -71,7 +71,14 @@
      </layout>
     </item>
     <item>
-     <widget class="GameStageWidget" name="stage" native="true"/>
+     <widget class="GameStageWidget" name="stage">
+      <property name="frameShape">
+       <enum>QFrame::StyledPanel</enum>
+      </property>
+      <property name="frameShadow">
+       <enum>QFrame::Raised</enum>
+      </property>
+     </widget>
     </item>
     <item>
      <layout class="QHBoxLayout" name="horizontalLayout_2">
@@ -149,7 +156,7 @@
  <customwidgets>
   <customwidget>
    <class>GameStageWidget</class>
-   <extends>QWidget</extends>
+   <extends>QFrame</extends>
    <header>gamestagewidget.h</header>
    <container>1</container>
   </customwidget>

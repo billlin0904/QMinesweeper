@@ -20,12 +20,14 @@ class Module {
 public:
 	explicit Module(const char *filename) 
 #ifdef Q_OS_LINUX
-		: module(dlopen(filename, RTLD_LAZY))
+		: module(dlopen(filename, RTLD_LAZY)) {
 #else
-		: module(LoadLibraryA(filename))
+		: module(LoadLibraryA(filename)) {
 #endif
-	{
 	}
+
+	Module(const Module&) = delete;
+	Module& operator=(const Module&) = delete;
 
 	~Module() {
 #ifdef Q_OS_LINUX
@@ -132,7 +134,7 @@ public:
 
     void setVolume(int vol) {
         if (stream != 0) {
-            BassLib::Get().BASS_ChannelSetAttribute(stream, BASS_ATTRIB_VOL, vol);
+            BassLib::Get().BASS_ChannelSetAttribute(stream, BASS_ATTRIB_VOL, double(vol) / 100.0);
         }
     }
 

@@ -1,6 +1,6 @@
 #pragma once
 
-#include <QFrame>
+#include <QLabel>
 #include <QPixmap>
 
 enum MineStatus {
@@ -19,7 +19,7 @@ enum MineStatus {
 	STATUS_MINE,
 };
 
-class Mine : public QFrame {
+class Mine : public QLabel {
 	Q_OBJECT
 public:
 	explicit Mine(int x, int y, QWidget* parent = nullptr);
