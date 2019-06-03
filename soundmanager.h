@@ -7,14 +7,12 @@
 class SoundManager : public QObject {
 	Q_OBJECT
 public:
-	explicit SoundManager(QObject* parent = nullptr);
+	explicit SoundManager(bool is_loop = false, QObject* parent = nullptr);
 
-	void addSound(const QUrl& path, bool loop = false, int volume = 100);
+	void addSound(const QUrl& path);
 
 public slots:
-	void replaceSound(const QUrl& path);
-
-	void play();
+	void play(int index);
 
 	void setMuted(bool status);
 

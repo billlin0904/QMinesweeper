@@ -50,11 +50,11 @@ public:
 
 signals:
 	void dug(int x, int y);
+	void setFlag();
 
 private:
 	void paintEvent(QPaintEvent*) override;
 	void mousePressEvent(QMouseEvent*) override;
-	void mouseReleaseEvent(QMouseEvent*) override;
 
 private:
 	bool downed;

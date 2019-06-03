@@ -1,25 +1,22 @@
 #include "soundmanager.h"
 
-SoundManager::SoundManager(QObject* parent)
+SoundManager::SoundManager(bool is_loop, QObject* parent)
 	: QObject(parent) 
 	, playlist(new QMediaPlaylist()) 
 	, player(new QMediaPlayer()) {	
 	player->setPlaylist(playlist);
-}
-
-void SoundManager::addSound(const QUrl& path, bool loop, int volume) {
-	playlist->addMedia(path);	
-	player->setVolume(volume);
+	player->setVolume(100);
 	playlist->setPlaybackMode(
-		loop ? QMediaPlaylist::CurrentItemInLoop : QMediaPlaylist::CurrentItemOnce);
+		is_loop ? QMediaPlaylist::CurrentItemInLoop : QMediaPlaylist::CurrentItemOnce);
 }
 
-void SoundManager::replaceSound(const QUrl& path) {
-	playlist->removeMedia(0);
+void SoundManager::addSound(const QUrl& path) {
 	playlist->addMedia(path);
 }
 
-void SoundManager::play() {
+void SoundManager::play(int index) {
+	playlist->setCurrentIndex(index);
+
 	if (player->state() == QMediaPlayer::PlayingState) {
 		player->setPosition(0);
 	} else if (player->state() == QMediaPlayer::StoppedState) {

@@ -52,7 +52,8 @@ private:
 	int max_mine;
 	int remain_mine;
 	int move;
-	SoundManager manger;
+	SoundManager sound_effect;
+	SoundManager background_sound;
 	std::unique_ptr<QGridLayout> layout;
 	std::vector<std::vector<std::unique_ptr<Mine>>> mines;
 };

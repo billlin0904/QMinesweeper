@@ -90,15 +90,12 @@ void Mine::mousePressEvent(QMouseEvent* event) {
 	else if (event->button() == Qt::RightButton) {
 		if (status == STATUS_INIT) {
 			setStatus(STATUS_FLAG);
+			emit setFlag();
 		}
 		else if (status == STATUS_FLAG) {
 			setStatus(STATUS_INIT);
 		}
 	}
-}
-
-void Mine::mouseReleaseEvent(QMouseEvent*) {
-
 }
 
 void Mine::setDowned(bool down) {
