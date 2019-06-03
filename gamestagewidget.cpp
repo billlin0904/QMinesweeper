@@ -10,12 +10,11 @@ GameStageWidget::GameStageWidget(QWidget* parent)
 	, move(0) {
 	setStyleSheet("#stage { background-color: white; }");	
 
+	sound_effect.addSound(QUrl::fromLocalFile("./Resources/sounds/bg.mp3"), true);
+
     sound_effect.addSound(QUrl::fromLocalFile("./Resources/sounds/click.wav"), false);
     sound_effect.addSound(QUrl::fromLocalFile("./Resources/sounds/flag.wav"), false);
-    sound_effect.addSound(QUrl::fromLocalFile("./Resources/sounds/gameover.mp3"), false);
-
-    background_sound.addSound(QUrl::fromLocalFile("./Resources/sounds/bg.mp3"), true);
-    background_sound.setVolume(0, 30);
+    sound_effect.addSound(QUrl::fromLocalFile("./Resources/sounds/gameover.mp3"), false);	
 }
 
 void GameStageWidget::restart() {
@@ -50,7 +49,7 @@ void GameStageWidget::create(int _M, int _N, int _max_mine) {
 			temp.emplace_back(mine);
 			QObject::connect(mine, &Mine::dug, this, &GameStageWidget::onDug);
 			QObject::connect(mine, &Mine::setFlag, [this]() {
-				sound_effect.play(1);
+				sound_effect.play(2);
 				});
 			layout->addWidget(mine, x, y);
 		}
@@ -60,8 +59,8 @@ void GameStageWidget::create(int _M, int _N, int _max_mine) {
 	randomMine();
 	calcNearMineCount();
 
-    background_sound.setMuted(0, false);
-	background_sound.play(0);
+	sound_effect.setVolume(0, 5);
+	sound_effect.play(0);
 
 	emit start(max_mine);
 	emit mineCountChanged(remain_mine);
@@ -90,9 +89,9 @@ void GameStageWidget::dug(int x, int y) {
 
 	if (mine->isMine()) {
 		mine->setDowned(true);
-		sound_effect.play(2);
-        background_sound.setMuted(0, true);
-		emit gameOver();	
+		sound_effect.play(3);
+		sound_effect.setMuted(0, true);
+		emit gameOver();
 		return;
 	}
 
@@ -116,7 +115,7 @@ void GameStageWidget::dug(int x, int y) {
 	}
 
 	emit moveChanged(++move);	
-	sound_effect.play(0);
+	sound_effect.play(1);
 }
 
 std::vector<const Mine*> GameStageWidget::getNearMine(int x, int y) const {

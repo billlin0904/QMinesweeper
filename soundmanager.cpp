@@ -9,22 +9,6 @@
 #endif
 
 #if 1
-#if 0
-template <typename FunctionType>
-class LibraryLoader {
-public:
-    LibraryLoader(const char *name, void *module) {
-        fun = reinterpret_cast<FunctionType*>(dlsym(module, name));
-    }
-
-    template <typename ...Args>
-    typename std::result_of<FunctionType(Args...)>::type operator()(Args... args) {
-        return (*fun)(args...);
-    }
-private:
-    FunctionType *fun;
-};
-#endif
 
 #ifdef Q_OS_LINUX
 #define LOAD_SYMBOL(module, name) dlsym(module, name)
@@ -32,9 +16,34 @@ private:
 #define LOAD_SYMBOL(module, name) GetProcAddress(module, name)
 #endif
 
+class Module {
+public:
+	explicit Module(const char *filename) 
+#ifdef Q_OS_LINUX
+		: module(dlopen(filename, RTLD_LAZY))
+#else
+		: module(LoadLibraryA(filename))
+#endif
+	{
+	}
+
+	~Module() {
+#ifdef Q_OS_LINUX
+		dlclose(module);
+#else
+		FreeLibrary(module);
+#endif
+	}
+
+#ifdef Q_OS_LINUX
+	void* module;
+#else
+	HMODULE module;
+#endif
+};
+
 using BASS_InitPfn = decltype(&BASS_Init);
 using BASS_FreePfn = decltype(&BASS_Free);
-//using BASS_StreamCreateFilePfn = decltype(&BASS_StreamCreateFile);
 typedef BOOL(*BASS_StreamCreateFilePfn)(BOOL mem, const void *file, QWORD offset, QWORD length, DWORD flags);
 using BASS_StreamFreePfn = decltype(&BASS_StreamFree);
 using BASS_ChannelSetAttributePfn = decltype(&BASS_ChannelSetAttribute);
@@ -43,25 +52,13 @@ using BASS_ChannelStopPfn = decltype(&BASS_ChannelStop);
 
 class BassLib {
 public:
-    ~BassLib() {
-#ifdef Q_OS_LINUX
-        dlclose(module);
-#else
-        FreeLibrary(module);
-#endif
-    }
-
     static BassLib & Get() {
         static BassLib lib;
         return lib;
     }
 
 private:
-#ifdef Q_OS_LINUX
-    void *module;
-#else
-    HMODULE module;
-#endif
+	Module module;
 
 public:
     BASS_InitPfn BASS_Init;
@@ -75,17 +72,17 @@ public:
 private:
     BassLib()
     #ifdef Q_OS_LINUX
-        : module(dlopen("./ThirdParty/bass/linux/libbass.so", RTLD_LAZY))
+        : module("./ThirdParty/bass/linux/libbass.so")
     #else
-        : module(LoadLibraryA("./ThirdParty/bass/win32/bass.dll"))
+        : module("./ThirdParty/bass/win32/bass.dll")
     #endif
-        , BASS_Init((BASS_InitPfn)LOAD_SYMBOL(module, "BASS_Init"))
-        , BASS_Free((BASS_FreePfn)LOAD_SYMBOL(module, "BASS_Free"))
-        , BASS_StreamCreateFile((BASS_StreamCreateFilePfn)LOAD_SYMBOL(module, "BASS_StreamCreateFile"))
-        , BASS_StreamFree((BASS_StreamFreePfn)LOAD_SYMBOL(module, "BASS_StreamFree"))
-        , BASS_ChannelSetAttribute((BASS_ChannelSetAttributePfn)LOAD_SYMBOL(module, "BASS_ChannelSetAttribute"))
-        , BASS_ChannelPlay((BASS_ChannelPlayPfn)LOAD_SYMBOL(module, "BASS_ChannelPlay"))
-        , BASS_ChannelStop((BASS_ChannelStopPfn)LOAD_SYMBOL(module, "BASS_ChannelStop")) {
+        , BASS_Init((BASS_InitPfn)LOAD_SYMBOL(module.module, "BASS_Init"))
+        , BASS_Free((BASS_FreePfn)LOAD_SYMBOL(module.module, "BASS_Free"))
+        , BASS_StreamCreateFile((BASS_StreamCreateFilePfn)LOAD_SYMBOL(module.module, "BASS_StreamCreateFile"))
+        , BASS_StreamFree((BASS_StreamFreePfn)LOAD_SYMBOL(module.module, "BASS_StreamFree"))
+        , BASS_ChannelSetAttribute((BASS_ChannelSetAttributePfn)LOAD_SYMBOL(module.module, "BASS_ChannelSetAttribute"))
+        , BASS_ChannelPlay((BASS_ChannelPlayPfn)LOAD_SYMBOL(module.module, "BASS_ChannelPlay"))
+        , BASS_ChannelStop((BASS_ChannelStopPfn)LOAD_SYMBOL(module.module, "BASS_ChannelStop")) {
     }
 };
 
@@ -110,8 +107,7 @@ class SoundManager::SoundPlayer {
 public:
     explicit SoundPlayer(bool _is_loop)
         : is_loop(_is_loop)
-        , stream(0) {
-        BasInit::Get();
+        , stream(0) {	
     }
 
     ~SoundPlayer() {
@@ -131,9 +127,7 @@ public:
     }
 
     void setMuted(bool status) {
-        if (stream != 0) {
-            BassLib::Get().BASS_ChannelSetAttribute(stream, BASS_ATTRIB_VOL, status ? 0 : 100);
-        }
+		setVolume(status ? 0 : 100);
     }
 
     void setVolume(int vol) {
@@ -160,6 +154,10 @@ public:
             BassLib::Get().BASS_ChannelStop(stream);
         }
     }
+
+	operator HSTREAM() const {
+		return stream;
+	}
 private:
     bool is_loop;
     HSTREAM stream;
@@ -168,6 +166,7 @@ private:
 
 SoundManager::SoundManager(QObject* parent)
     : QObject(parent) {
+	BasInit::Get();
 }
 
 SoundManager::~SoundManager() {
@@ -199,3 +198,4 @@ void SoundManager::setVolume(int index, int vol) {
     }
     playlist[index]->setVolume(vol);
 }
+
