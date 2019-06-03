@@ -9,12 +9,14 @@ GameStageWidget::GameStageWidget(QWidget* parent)
 	, remain_mine(0)
 	, move(0)
 	, sound_effect(false)
-	, background_sound(true) {
+    , background_sound(true) {
 	setStyleSheet("#stage { background-color: white; }");	
-	background_sound.addSound(QUrl::fromLocalFile("./Resources/sounds/bg.mp3"));
-	sound_effect.addSound(QUrl::fromLocalFile("./Resources/sounds/click.wav"));
-	sound_effect.addSound(QUrl::fromLocalFile("./Resources/sounds/flag.wav"));
-	sound_effect.addSound(QUrl::fromLocalFile("./Resources/sounds/gameover.mp3"));
+#ifdef Q_OS_WIN32
+    background_sound.addSound(QUrl::fromLocalFile("./Resources/sounds/bg.mp3"));
+    sound_effect.addSound(QUrl::fromLocalFile("./Resources/sounds/click.wav"));
+    sound_effect.addSound(QUrl::fromLocalFile("./Resources/sounds/flag.wav"));
+    sound_effect.addSound(QUrl::fromLocalFile("./Resources/sounds/gameover.mp3"));
+#endif
 }
 
 void GameStageWidget::restart() {
@@ -24,8 +26,6 @@ void GameStageWidget::restart() {
 void GameStageWidget::create(int _M, int _N, int _max_mine) {
 	emit stop();
 
-	// 第二次create之後new QGridLayout(this)會產生已存在layout錯誤.
-	// 必須要先reset在reset(new XXX);
 	layout.reset();
 	layout.reset(new QGridLayout(this));
 
