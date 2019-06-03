@@ -19,6 +19,8 @@ public slots:
 
     void setMuted(int index, bool status);
 
+    void setVolume(int index, int vol);
+
 private:
     class SoundPlayer;
     std::vector<std::unique_ptr<SoundPlayer>> playlist;

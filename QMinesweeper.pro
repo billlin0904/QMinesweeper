@@ -42,7 +42,9 @@ HEADERS += \
 FORMS += \
         mainwindow.ui
 
+linux-g++* {
 LIBS += -ldl
+}
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin

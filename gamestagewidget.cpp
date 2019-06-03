@@ -10,10 +10,12 @@ GameStageWidget::GameStageWidget(QWidget* parent)
 	, move(0) {
 	setStyleSheet("#stage { background-color: white; }");	
 
-    background_sound.addSound(QUrl::fromLocalFile("./Resources/sounds/bg.mp3"), true);
     sound_effect.addSound(QUrl::fromLocalFile("./Resources/sounds/click.wav"), false);
     sound_effect.addSound(QUrl::fromLocalFile("./Resources/sounds/flag.wav"), false);
     sound_effect.addSound(QUrl::fromLocalFile("./Resources/sounds/gameover.mp3"), false);
+
+    background_sound.addSound(QUrl::fromLocalFile("./Resources/sounds/bg.mp3"), true);
+    background_sound.setVolume(0, 30);
 }
 
 void GameStageWidget::restart() {

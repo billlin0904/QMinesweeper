@@ -1,7 +1,12 @@
-#include <dlfcn.h>
 #include <bass.h>
 
 #include "soundmanager.h"
+
+#ifdef Q_OS_LINUX
+#include <dlfcn.h>
+#else
+#include <libloaderapi.h>
+#endif
 
 #if 1
 #if 0
@@ -21,9 +26,16 @@ private:
 };
 #endif
 
+#ifdef Q_OS_LINUX
+#define LOAD_SYMBOL(module, name) dlsym(module, name)
+#else
+#define LOAD_SYMBOL(module, name) GetProcAddress(module, name)
+#endif
+
 using BASS_InitPfn = decltype(&BASS_Init);
 using BASS_FreePfn = decltype(&BASS_Free);
-using BASS_StreamCreateFilePfn = decltype(&BASS_StreamCreateFile);
+//using BASS_StreamCreateFilePfn = decltype(&BASS_StreamCreateFile);
+typedef BOOL(*BASS_StreamCreateFilePfn)(BOOL mem, const void *file, QWORD offset, QWORD length, DWORD flags);
 using BASS_StreamFreePfn = decltype(&BASS_StreamFree);
 using BASS_ChannelSetAttributePfn = decltype(&BASS_ChannelSetAttribute);
 using BASS_ChannelPlayPfn = decltype(&BASS_ChannelPlay);
@@ -32,7 +44,11 @@ using BASS_ChannelStopPfn = decltype(&BASS_ChannelStop);
 class BassLib {
 public:
     ~BassLib() {
+#ifdef Q_OS_LINUX
         dlclose(module);
+#else
+        FreeLibrary(module);
+#endif
     }
 
     static BassLib & Get() {
@@ -41,7 +57,11 @@ public:
     }
 
 private:
+#ifdef Q_OS_LINUX
     void *module;
+#else
+    HMODULE module;
+#endif
 
 public:
     BASS_InitPfn BASS_Init;
@@ -54,14 +74,18 @@ public:
 
 private:
     BassLib()
+    #ifdef Q_OS_LINUX
         : module(dlopen("./ThirdParty/bass/linux/libbass.so", RTLD_LAZY))
-        , BASS_Init((BASS_InitPfn)dlsym(module, "BASS_Init"))
-        , BASS_Free((BASS_FreePfn)dlsym(module, "BASS_Free"))
-        , BASS_StreamCreateFile((BASS_StreamCreateFilePfn)dlsym(module, "BASS_StreamCreateFile"))
-        , BASS_StreamFree((BASS_StreamFreePfn)dlsym(module, "BASS_StreamFree"))
-        , BASS_ChannelSetAttribute((BASS_ChannelSetAttributePfn)dlsym(module, "BASS_ChannelSetAttribute"))
-        , BASS_ChannelPlay((BASS_ChannelPlayPfn)dlsym(module, "BASS_ChannelPlay"))
-        , BASS_ChannelStop((BASS_ChannelStopPfn)dlsym(module, "BASS_ChannelStop")) {
+    #else
+        : module(LoadLibraryA("./ThirdParty/bass/win32/bass.dll"))
+    #endif
+        , BASS_Init((BASS_InitPfn)LOAD_SYMBOL(module, "BASS_Init"))
+        , BASS_Free((BASS_FreePfn)LOAD_SYMBOL(module, "BASS_Free"))
+        , BASS_StreamCreateFile((BASS_StreamCreateFilePfn)LOAD_SYMBOL(module, "BASS_StreamCreateFile"))
+        , BASS_StreamFree((BASS_StreamFreePfn)LOAD_SYMBOL(module, "BASS_StreamFree"))
+        , BASS_ChannelSetAttribute((BASS_ChannelSetAttributePfn)LOAD_SYMBOL(module, "BASS_ChannelSetAttribute"))
+        , BASS_ChannelPlay((BASS_ChannelPlayPfn)LOAD_SYMBOL(module, "BASS_ChannelPlay"))
+        , BASS_ChannelStop((BASS_ChannelStopPfn)LOAD_SYMBOL(module, "BASS_ChannelStop")) {
     }
 };
 
@@ -112,6 +136,12 @@ public:
         }
     }
 
+    void setVolume(int vol) {
+        if (stream != 0) {
+            BassLib::Get().BASS_ChannelSetAttribute(stream, BASS_ATTRIB_VOL, vol);
+        }
+    }
+
     void close() {
         if (stream != 0) {
             BassLib::Get().BASS_StreamFree(stream);
@@ -150,9 +180,22 @@ void SoundManager::addSound(const QUrl& path, bool is_loop) {
 }
 
 void SoundManager::play(int index) {
+    if (playlist.empty()) {
+        return;
+    }
     playlist[index]->play();
 }
 
 void SoundManager::setMuted(int index, bool status) {
+    if (playlist.empty()) {
+        return;
+    }
     playlist[index]->setMuted(status);
+}
+
+void SoundManager::setVolume(int index, int vol) {
+    if (playlist.empty()) {
+        return;
+    }
+    playlist[index]->setVolume(vol);
 }
