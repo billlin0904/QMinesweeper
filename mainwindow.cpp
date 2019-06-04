@@ -29,7 +29,8 @@ MainWindow::MainWindow(QWidget* parent)
 
 	auto action3 = new QAction(tr("Export"), this);
 	QObject::connect(action3, &QAction::triggered, [this]() {
-		ui->stage->create(30, 24, 99);
+        ui->stage->create(30, 24, 99);
+        //ui->stage->create(50, 50, 375);
         ui->stage->setDisabled(false);
 		});
 

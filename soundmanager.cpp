@@ -38,7 +38,7 @@ public:
 	}
 
 #ifdef Q_OS_LINUX
-	void* module;
+    void* module;
 #else
 	HMODULE module;
 #endif
@@ -54,7 +54,7 @@ using BASS_ChannelStopPfn = decltype(&BASS_ChannelStop);
 
 class BassLib {
 public:
-    static BassLib & Get() {
+    static BassLib & get() {
         static BassLib lib;
         return lib;
     }
@@ -90,18 +90,18 @@ private:
 
 class BasInit {
 public:
-    static BasInit& Get() {
+    static BasInit& get() {
         static BasInit instance;
         return instance;
     }
 
 private:
     BasInit() {
-        BassLib::Get().BASS_Init(-1, 44100, 0, nullptr, nullptr);
+        BassLib::get().BASS_Init(-1, 44100, 0, nullptr, nullptr);
     }
 
     ~BasInit() {
-        BassLib::Get().BASS_Free();
+        BassLib::get().BASS_Free();
     }
 };
 
@@ -121,7 +121,7 @@ public:
 
     void load(const QString &filename) {
         close();
-        stream = BassLib::Get().BASS_StreamCreateFile(false,
+        stream = BassLib::get().BASS_StreamCreateFile(false,
                                                       filename.toLatin1(),
                                                       0,
                                                       0,
@@ -134,26 +134,26 @@ public:
 
     void setVolume(int vol) {
         if (stream != 0) {
-            BassLib::Get().BASS_ChannelSetAttribute(stream, BASS_ATTRIB_VOL, double(vol) / 100.0);
+            BassLib::get().BASS_ChannelSetAttribute(stream, BASS_ATTRIB_VOL, double(vol) / 100.0);
         }
     }
 
     void close() {
         if (stream != 0) {
-            BassLib::Get().BASS_StreamFree(stream);
+            BassLib::get().BASS_StreamFree(stream);
         }
         stream = 0;
     }
 
     void play() {
         if (stream != 0) {
-            BassLib::Get().BASS_ChannelPlay(stream, true);
+            BassLib::get().BASS_ChannelPlay(stream, true);
         }
     }
 
     void stop() {
         if (stream != 0) {
-            BassLib::Get().BASS_ChannelStop(stream);
+            BassLib::get().BASS_ChannelStop(stream);
         }
     }
 
@@ -168,7 +168,7 @@ private:
 
 SoundManager::SoundManager(QObject* parent)
     : QObject(parent) {
-	BasInit::Get();
+    BasInit::get();
 }
 
 SoundManager::~SoundManager() {

@@ -177,14 +177,18 @@ std::vector<const Mine*> GameStageWidget::getNearMine(int x, int y) const {
 
 void GameStageWidget::randomMine(const std::vector<const Mine*>* skip_mine) {
 	RNG random;
-
-	for (auto i = 0, x = 0, y = 0; i < max_mine; ++i) {
-		while (mines[x][y]->isMine()) {
-			x = random(0, N - 1);
-			y = random(0, M - 1);
-		}
-		mines[x][y]->setMine(true);
-	}
+    std::vector<bool> shuffle_bool(M * N);
+    for (size_t i = 0; i < shuffle_bool.size(); ++i) {
+        shuffle_bool[i] = i < max_mine;
+    }
+    random.shuffle(shuffle_bool.begin(), shuffle_bool.end());
+    size_t i = 0;
+    for (auto x = 0; x < N; ++x) {
+        for (auto y = 0; y < M; ++y) {
+            mines[x][y]->setMine(shuffle_bool[i]);
+            ++i;
+        }
+    }
 }
 
 void GameStageWidget::resizeEvent(QResizeEvent*) {
