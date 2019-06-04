@@ -8,7 +8,7 @@ GameStageWidget::GameStageWidget(QWidget* parent)
 	, max_mine(0)
 	, remain_mine(0)
 	, move(0) {
-	setStyleSheet("#stage { background-color: white; }");	
+    setStyleSheet("#stage { background-color: white; border: none; }");
 
 	sound_effect.addSound(QUrl::fromLocalFile("./Resources/sounds/bg.mp3"), true);
     sound_effect.addSound(QUrl::fromLocalFile("./Resources/sounds/click.wav"), false);
@@ -22,6 +22,7 @@ void GameStageWidget::restart() {
 
 void GameStageWidget::create(int _M, int _N, int _max_mine) {
 	emit stop();
+    emit moveChanged(0);
 
 	layout.reset(new QGridLayout());
 
@@ -34,8 +35,6 @@ void GameStageWidget::create(int _M, int _N, int _max_mine) {
 	remain_mine = max_mine;
 	move = 0;
 
-	auto i = 0;
-
 	for (auto x = 0; x < N; ++x) {
 		std::vector<std::unique_ptr<Mine>> temp;
 		for (auto y = 0; y < M; ++y) {
@@ -43,16 +42,16 @@ void GameStageWidget::create(int _M, int _N, int _max_mine) {
 			temp.emplace_back(mine);
 			QObject::connect(mine, &Mine::dug, this, &GameStageWidget::onDug);
 			QObject::connect(mine, &Mine::setFlag, [this]() {
-				sound_effect.play(2);
+                sound_effect.play(FLAG_INDEX);
 				});
 			layout->addWidget(mine, x, y);
 		}
 		mines[x] = std::move(temp);
 	}
 
-	layout->setSpacing(0);
+    layout->setSpacing(0);
 	layout->setMargin(0);
-	layout->setContentsMargins(0, 0, 0, 0);
+    layout->setContentsMargins(0, 0, 0, 0);
 
 	setLayout(layout.get());
 
@@ -60,7 +59,7 @@ void GameStageWidget::create(int _M, int _N, int _max_mine) {
 	calcNearMineCount();
 
 	sound_effect.setVolume(0, 3);
-	sound_effect.play(0);
+    sound_effect.play(BACKGROUND_MUSIC_INDEX);
 
 	emit start(max_mine);
 	emit mineCountChanged(remain_mine);
@@ -84,17 +83,32 @@ void GameStageWidget::onDug(int x, int y) {
 	dug(x, y);
 }
 
+void GameStageWidget::showAll() {
+    for (auto x = 0; x < N; ++x) {
+        for (auto y = 0; y < M; ++y) {
+            auto& mine = mines[x][y];
+            if (mine->isMine()) {
+                mine->setStatus(STATUS_MINE);
+            } else {
+                mine->setDowned(true);
+                mine->setStatus(mine->getNearMineCount());
+            }
+        }
+    }
+}
+
 void GameStageWidget::dug(int x, int y, bool play_sound) {
 	if (play_sound) {
-		sound_effect.play(1);
+        sound_effect.play(DUG_INDEX);
 	}
 
 	auto& mine = mines[x][y];
 
 	if (mine->isMine()) {
 		mine->setDowned(true);
-		sound_effect.play(3);
+        sound_effect.play(GAME_OVER_INDEX);
 		sound_effect.setMuted(0, true);
+        showAll();
 		emit gameOver();
 		return;
 	}
@@ -118,7 +132,9 @@ void GameStageWidget::dug(int x, int y, bool play_sound) {
 		}
 	}
 
-	emit moveChanged(++move);	
+    if (play_sound) {
+        emit moveChanged(++move);
+    }
 }
 
 std::vector<const Mine*> GameStageWidget::getNearMine(int x, int y) const {

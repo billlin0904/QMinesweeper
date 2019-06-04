@@ -46,7 +46,7 @@ public:
 		near_mine_count = count;
 	}
 
-	MineStatus getNearMineCount() const;
+	MineStatus getNearMineCount() const;    
 
 signals:
 	void dug(int x, int y);

@@ -13,6 +13,13 @@
 class GameStageWidget : public QFrame {
 	Q_OBJECT
 public:
+    enum SoundIndex {
+        BACKGROUND_MUSIC_INDEX = 0,
+        DUG_INDEX,
+        FLAG_INDEX,
+        GAME_OVER_INDEX
+    };
+
 	explicit GameStageWidget(QWidget* parent = nullptr);
 
 	void restart();
@@ -46,6 +53,8 @@ private:
 	void onDug(int x, int y);
 
 	void dug(int x, int y, bool play_sound = true);
+
+    void showAll();
 
 	int N;
 	int M;
