@@ -24,7 +24,7 @@ public:
 
 	void restart();
 	
-	void create(int _M, int _N, int _max_mine);
+	void create(int _M, int _N, int _max_mine, bool reset_layout = true);
 
 	int getMaxMine() const {
 		return max_mine;

@@ -15,6 +15,12 @@ Mine::Mine(int x, int y, QWidget* parent)
 	setObjectName("mine");
 }
 
+void Mine::reset() {
+	setStatus(STATUS_INIT);
+	downed = false;
+	is_mine = false;
+}
+
 void Mine::setMine(bool _is_mine) {
 	is_mine = _is_mine;
 	if (_is_mine) {
@@ -45,44 +51,39 @@ void Mine::paintEvent(QPaintEvent*) {
 
 	auto rc = rect();
 
-	if (downed) {
+	//if (downed) {
 		//painter.fillRect(0, 0, width() - 1, height() - 1, Qt::lightGray);
-		if (status >= STATUS_NUM1 && status <= STATUS_NUM8) {
-			static QString path_table[] = {
-				"",
-				":/Resources/Resources/imgs/num1.png",
-				":/Resources/Resources/imgs/num2.png",
-				":/Resources/Resources/imgs/num3.png",
-				":/Resources/Resources/imgs/num4.png",
-				":/Resources/Resources/imgs/num5.png",
-				":/Resources/Resources/imgs/num6.png",
-				":/Resources/Resources/imgs/num7.png",
-				":/Resources/Resources/imgs/num8.png",
-			};
-			painter.drawPixmap(rc,
-				QPixmap(path_table[status]));
-		}
-	}
+	//}
 
-	if (status == STATUS_FLAG) {
+	if (status >= STATUS_NUM1 && status <= STATUS_NUM8) {
+		static QString path_table[] = {
+			"",
+			":/Resources/Resources/imgs/num1.png",
+			":/Resources/Resources/imgs/num2.png",
+			":/Resources/Resources/imgs/num3.png",
+			":/Resources/Resources/imgs/num4.png",
+			":/Resources/Resources/imgs/num5.png",
+			":/Resources/Resources/imgs/num6.png",
+			":/Resources/Resources/imgs/num7.png",
+			":/Resources/Resources/imgs/num8.png",
+		};
+		painter.drawPixmap(rc,
+			QPixmap(path_table[status]));
+	} else if (status == STATUS_FLAG) {
 		if (flag_img.isNull()) {
 			flag_img = QPixmap(":/Resources/Resources/imgs/flag.png");
 		}
 		painter.drawPixmap(rc, flag_img);
+	} else if (status == STATUS_MINE) {
+		painter.drawPixmap(rc, mine_img);
+	} else if (status == STATUS_BANK) {
+		painter.drawPixmap(rc, QPixmap(":/Resources/Resources/imgs/bank.png"));
+	} else if (status == STATUS_INIT) {
+		painter.drawPixmap(rc, QPixmap(":/Resources/Resources/imgs/init.png"));
 	}
 
 	//painter.setPen(QPen(QBrush(Qt::gray), 1));
-	//painter.drawRoundRect(0, 0, width() - 1, height() - 1, 2, 2);
-
-	if (status == STATUS_MINE) {
-		painter.drawPixmap(rc, mine_img);
-	}
-	else if (status == STATUS_BANK) {
-		painter.drawPixmap(rc, QPixmap(":/Resources/Resources/imgs/bank.png"));
-	}
-	else if (status == STATUS_INIT) {
-		painter.drawPixmap(rc, QPixmap(":/Resources/Resources/imgs/init.png"));
-	}
+	//painter.drawRoundRect(0, 0, width() - 1, height() - 1, 2, 2);	
 }
 
 void Mine::mousePressEvent(QMouseEvent* event) {
