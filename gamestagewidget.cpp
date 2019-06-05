@@ -1,3 +1,5 @@
+#include <QDebug>
+#include <cassert>
 #include "rng.h"
 #include "gamestagewidget.h"
 
@@ -33,8 +35,7 @@ void GameStageWidget::create(int _M, int _N, int _max_mine, bool reset_layout) {
 		N = _N;
 		M = _M;
 		max_mine = _max_mine;
-		remain_mine = max_mine;
-		move = 0;
+		remain_mine = max_mine;		
 
 		for (auto x = 0; x < N; ++x) {
 			std::vector<std::unique_ptr<Mine>> temp;
@@ -64,6 +65,7 @@ void GameStageWidget::create(int _M, int _N, int _max_mine, bool reset_layout) {
 		}
 	}
 
+	move = 0;
 	randomMine();
 	calcNearMineCount();
 
@@ -97,7 +99,7 @@ void GameStageWidget::showAll() {
 		for (auto y = 0; y < M; ++y) {
 			auto& mine = mines[x][y];
 			if (mine->isMine()) {
-				mine->setStatus(STATUS_MINE);
+				mine->setStatus(STATUS_BOMB);
 			}
 			else {
 				auto count = mine->getNearMineCount();
@@ -115,18 +117,26 @@ void GameStageWidget::dug(int x, int y, bool play_sound) {
 	auto& mine = mines[x][y];
 
 	if (mine->isMine()) {
-		mine->setDowned(true);
-		sound_effect.play(GAME_OVER_INDEX);
-		sound_effect.setMuted(0, true);
-		showAll();
-		emit gameOver();
-		return;
+		if (move == 0) {
+			auto near_mine = getNearMine(x, y);
+			near_mine.push_back(mine.get());
+			randomMine(&near_mine);
+			calcNearMineCount();
+			mine->setDowned(true);
+		} else {
+			mine->setDowned(true);
+			sound_effect.play(GAME_OVER_INDEX);
+			sound_effect.setMuted(0, true);
+			showAll();
+			emit gameOver();
+			return;
+		}
 	}
 
-	auto is_mine = mine->getStatus() == STATUS_MINE;
+	auto is_mine = mine->getStatus() == STATUS_BOMB;
 	mine->setDowned(true);
 
-	if (!is_mine && mine->getStatus() == STATUS_MINE) {
+	if (!is_mine && mine->getStatus() == STATUS_BOMB) {
 		--remain_mine;
 		emit mineCountChanged(remain_mine);
 	}
@@ -187,18 +197,79 @@ std::vector<const Mine*> GameStageWidget::getNearMine(int x, int y) const {
 
 void GameStageWidget::randomMine(const std::vector<const Mine*>* skip_mine) {
 	RNG random;
-	std::vector<bool> shuffle_bool(M * N);
-	for (size_t i = 0; i < shuffle_bool.size(); ++i) {
-		shuffle_bool[i] = i < max_mine;
-	}
-	random.shuffle(shuffle_bool.begin(), shuffle_bool.end());
-	size_t i = 0;
-	for (auto x = 0; x < N; ++x) {
-		for (auto y = 0; y < M; ++y) {
-			mines[x][y]->setMine(shuffle_bool[i]);
-			++i;
+	
+	if (skip_mine != nullptr) {
+		std::vector<bool> shuffle_bool(M * N);
+
+		size_t i = 0;
+		for (auto x = 0; x < N; ++x) {
+			for (auto y = 0; y < M; ++y) {
+				shuffle_bool[i] = mines[x][y]->isMine();
+				++i;
+			}
+		}
+
+		std::vector<const Mine*> temp = *skip_mine;
+		std::vector<size_t> need_set_bomb;
+		i = 0;
+		bool end_search = false;
+		int max_set_mine = 0;
+		for (auto x = 0; x < N && !end_search; ++x) {
+			for (auto y = 0; y < M && !end_search; ++y) {
+				if (shuffle_bool[i]) {
+					auto itr =
+						std::find_if(temp.begin(), temp.end(), [x, y](auto mine) {
+						return mine->getX() == x && mine->getY() == y;
+							});
+					auto is_found = itr != temp.end();
+					if (is_found) {
+						temp.erase(itr);
+						shuffle_bool[i] = false;
+						qDebug() << "Skip " << x << ":" << y;	
+						++max_set_mine;
+					}
+					else {
+						qDebug() << "Not found " << x << ":" << y;
+					}
+				} else {
+					need_set_bomb.push_back(i);
+					// Side mine test must bigger than one!
+					end_search = temp.empty() && need_set_bomb.size() > 1;
+				}
+				++i;
+			}
+		}
+
+		assert(max_set_mine > 0);
+		qDebug() << "Max set mine " << max_set_mine;
+		for (auto i = 0; i < max_set_mine; ++i) {
+			qDebug() << "Set " << need_set_bomb[i] << " true";
+			shuffle_bool[need_set_bomb[i]] = true;
+		}
+
+		i = 0;
+		for (auto x = 0; x < N; ++x) {
+			for (auto y = 0; y < M; ++y) {
+				mines[x][y]->setMine(shuffle_bool[i]);
+				++i;
+			}
 		}
 	}
+	else {
+		std::vector<bool> shuffle_bool(M * N);
+		for (size_t i = 0; i < shuffle_bool.size(); ++i) {
+			shuffle_bool[i] = i < max_mine;
+		}
+		random.shuffle(shuffle_bool.begin(), shuffle_bool.end());
+
+		size_t i = 0;
+		for (auto x = 0; x < N; ++x) {
+			for (auto y = 0; y < M; ++y) {
+				mines[x][y]->setMine(shuffle_bool[i]);
+				++i;
+			}
+		}
+	}	
 }
 
 void GameStageWidget::resizeEvent(QResizeEvent*) {

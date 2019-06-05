@@ -16,7 +16,7 @@ enum MineStatus {
 
 	STATUS_INIT,
 	STATUS_FLAG,
-	STATUS_MINE,
+	STATUS_BOMB,
 };
 
 class Mine : public QLabel {
@@ -33,6 +33,8 @@ public:
 	bool isMine() const;
 
 	bool isFlag() const;
+
+	bool isNumber() const;
 
 	int getX() const;
 

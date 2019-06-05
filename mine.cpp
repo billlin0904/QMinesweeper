@@ -41,8 +41,12 @@ bool Mine::isDowned() const {
 
 void Mine::setStatus(MineStatus _status) {
 	status = _status;
-	qDebug() << "Status:" << status;
+	//qDebug() << "Status:" << status;
 	update();
+}
+
+bool Mine::isNumber() const {
+	return status >= STATUS_NUM1 && status <= STATUS_NUM8;
 }
 
 void Mine::paintEvent(QPaintEvent*) {
@@ -55,7 +59,7 @@ void Mine::paintEvent(QPaintEvent*) {
 		//painter.fillRect(0, 0, width() - 1, height() - 1, Qt::lightGray);
 	//}
 
-	if (status >= STATUS_NUM1 && status <= STATUS_NUM8) {
+	if (isNumber()) {
 		static QString path_table[] = {
 			"",
 			":/Resources/Resources/imgs/num1.png",
@@ -74,7 +78,7 @@ void Mine::paintEvent(QPaintEvent*) {
 			flag_img = QPixmap(":/Resources/Resources/imgs/flag.png");
 		}
 		painter.drawPixmap(rc, flag_img);
-	} else if (status == STATUS_MINE) {
+	} else if (status == STATUS_BOMB) {
 		painter.drawPixmap(rc, mine_img);
 	} else if (status == STATUS_BANK) {
 		painter.drawPixmap(rc, QPixmap(":/Resources/Resources/imgs/bank.png"));
@@ -107,6 +111,6 @@ void Mine::setDowned(bool down) {
 	}
 	downed = down;
 	if (is_mine) {
-		setStatus(STATUS_MINE);
+		setStatus(STATUS_BOMB);
     }
 }

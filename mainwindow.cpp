@@ -42,7 +42,8 @@ MainWindow::MainWindow(QWidget* parent)
 	auto help_menu = new QMenu(tr("Help"));
 	auto about_action = new QAction(tr("About"), this);
 	QObject::connect(about_action, &QAction::triggered, [this]() {
-		QMessageBox::about(this, "QMinesweeper", "<a href='https://github.com/billlin0904/QMinesweeper'>GitHub</a>");
+		QMessageBox::about(this, "QMinesweeper", 
+			"<a href='https://github.com/billlin0904/QMinesweeper'>GitHub</a>");
 		});
 	help_menu->addAction(about_action);
 
