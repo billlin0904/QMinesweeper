@@ -31,7 +31,7 @@ void Mine::setMine(bool _is_mine) {
 	}
 }
 
-bool Mine::isMine() const {
+bool Mine::isBomb() const {
 	return is_mine;
 }
 

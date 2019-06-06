@@ -81,7 +81,7 @@ void GameStageWidget::calcNearMineCount() {
 		for (auto y = 0; y < M; ++y) {
 			auto mine_count = 0;
 			for (auto mine : getNearMine(x, y)) {
-				if (mine->isMine()) {
+				if (mine->isBomb()) {
 					++mine_count;
 				}
 			}
@@ -98,7 +98,7 @@ void GameStageWidget::showAll() {
 	for (auto x = 0; x < N; ++x) {
 		for (auto y = 0; y < M; ++y) {
 			auto& mine = mines[x][y];
-			if (mine->isMine()) {
+			if (mine->isBomb()) {
 				mine->setStatus(STATUS_BOMB);
 			}
 			else {
@@ -109,28 +109,39 @@ void GameStageWidget::showAll() {
 	}
 }
 
+static bool hasNearBomb(std::vector<const Mine*> &mines) {
+	for (auto mine : mines) {
+		if (mine->isBomb()) {
+			return true;
+		}
+	}
+	return false;
+}
+
 void GameStageWidget::dug(int x, int y, bool play_sound) {
 	if (play_sound) {
 		sound_effect.play(DUG_INDEX);
+	}	
+
+	if (move == 0 && play_sound) {
+		auto& mine = mines[x][y];
+		auto near_mine = getNearMine(x, y);
+		near_mine.push_back(mine.get());
+		if (hasNearBomb(near_mine)) {			
+			randomMine(&near_mine);
+			calcNearMineCount();
+		}		
 	}
 
 	auto& mine = mines[x][y];
 
-	if (mine->isMine()) {
-		if (move == 0) {
-			auto near_mine = getNearMine(x, y);
-			near_mine.push_back(mine.get());
-			randomMine(&near_mine);
-			calcNearMineCount();
-			mine->setDowned(true);
-		} else {
-			mine->setDowned(true);
-			sound_effect.play(GAME_OVER_INDEX);
-			sound_effect.setMuted(0, true);
-			showAll();
-			emit gameOver();
-			return;
-		}
+	if (mine->isBomb()) {
+		mine->setDowned(true);
+		sound_effect.play(GAME_OVER_INDEX);
+		sound_effect.setMuted(0, true);
+		showAll();
+		emit gameOver();
+		return;
 	}
 
 	auto is_mine = mine->getStatus() == STATUS_BOMB;
@@ -199,12 +210,13 @@ void GameStageWidget::randomMine(const std::vector<const Mine*>* skip_mine) {
 	RNG random;
 	
 	if (skip_mine != nullptr) {
-		std::vector<bool> shuffle_bool(M * N);
+		std::vector<bool> shuffle_bool(M * N);		
 
 		size_t i = 0;
 		for (auto x = 0; x < N; ++x) {
 			for (auto y = 0; y < M; ++y) {
-				shuffle_bool[i] = mines[x][y]->isMine();
+				shuffle_bool[i] = mines[x][y]->isBomb();
+				mines[x][y]->reset();
 				++i;
 			}
 		}
@@ -216,22 +228,19 @@ void GameStageWidget::randomMine(const std::vector<const Mine*>* skip_mine) {
 		int max_set_mine = 0;
 		for (auto x = 0; x < N && !end_search; ++x) {
 			for (auto y = 0; y < M && !end_search; ++y) {
-				if (shuffle_bool[i]) {
-					auto itr =
-						std::find_if(temp.begin(), temp.end(), [x, y](auto mine) {
-						return mine->getX() == x && mine->getY() == y;
-							});
-					auto is_found = itr != temp.end();
-					if (is_found) {
-						temp.erase(itr);
-						shuffle_bool[i] = false;
-						qDebug() << "Skip " << x << ":" << y;	
+				auto itr =
+					std::find_if(temp.begin(), temp.end(), [x, y](auto mine) {
+					return mine->getX() == x && mine->getY() == y;
+						});
+				if (itr != temp.end()) {										
+					if (shuffle_bool[i]) {
 						++max_set_mine;
 					}
-					else {
-						qDebug() << "Not found " << x << ":" << y;
-					}
-				} else {
+					temp.erase(itr);
+					shuffle_bool[i] = false;
+					qDebug() << "Skip " << x << ":" << y;
+				}
+				else {
 					need_set_bomb.push_back(i);
 					// Side mine test must bigger than one!
 					end_search = temp.empty() && need_set_bomb.size() > 1;
@@ -242,6 +251,8 @@ void GameStageWidget::randomMine(const std::vector<const Mine*>* skip_mine) {
 
 		assert(max_set_mine > 0);
 		qDebug() << "Max set mine " << max_set_mine;
+		random.shuffle(need_set_bomb.begin(), need_set_bomb.end());
+
 		for (auto i = 0; i < max_set_mine; ++i) {
 			qDebug() << "Set " << need_set_bomb[i] << " true";
 			shuffle_bool[need_set_bomb[i]] = true;

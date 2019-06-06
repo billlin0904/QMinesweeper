@@ -30,7 +30,7 @@ public:
 
 	bool isDowned() const;
 
-	bool isMine() const;
+	bool isBomb() const;
 
 	bool isFlag() const;
 
