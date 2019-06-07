@@ -17,7 +17,8 @@ public:
         BACKGROUND_MUSIC_INDEX = 0,
         DUG_INDEX,
         FLAG_INDEX,
-        GAME_OVER_INDEX
+        GAME_OVER_INDEX,
+		GAME_WIN_INDEX,
     };
 
 	explicit GameStageWidget(QWidget* parent = nullptr);
@@ -30,6 +31,10 @@ public:
 		return max_mine;
 	}
 
+	void setDebugMode(bool enable);
+
+	void fadeOut();
+
 signals:
 	void start(int max_mine);
 
@@ -40,6 +45,8 @@ signals:
 	void stop();
 
 	void gameOver();
+
+	void gameWin();
 
 private:
 	void resizeEvent(QResizeEvent*) override;

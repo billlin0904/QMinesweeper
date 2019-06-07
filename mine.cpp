@@ -1,12 +1,16 @@
 #include <QPainter>
 #include <QMouseEvent>
+#include <QGraphicsOpacityEffect>
+#include <QPropertyAnimation>
 #include <QDebug>
+#include "resourcemanager.h"
 #include "mine.h"
 
 Mine::Mine(int x, int y, QWidget* parent)
 	: QLabel(parent)
 	, downed(false)
-	, is_mine(false)
+	, is_bomb(false)
+	, enable_debug_mode(false)
 	, near_mine_count(STATUS_BANK)
 	, x(x)
 	, y(y)
@@ -18,21 +22,11 @@ Mine::Mine(int x, int y, QWidget* parent)
 void Mine::reset() {
 	setStatus(STATUS_INIT);
 	downed = false;
-	is_mine = false;
+	is_bomb = false;
 }
 
-void Mine::setMine(bool _is_mine) {
-	is_mine = _is_mine;
-	if (_is_mine) {
-		mine_img = QPixmap(":/Resources/Resources/imgs/mine.png");
-	}
-	else {
-		mine_img = QPixmap();
-	}
-}
-
-bool Mine::isBomb() const {
-	return is_mine;
+void Mine::setBomb(bool _is_bomb) {
+	is_bomb = _is_bomb;
 }
 
 bool Mine::isDowned() const {
@@ -41,8 +35,11 @@ bool Mine::isDowned() const {
 
 void Mine::setStatus(MineStatus _status) {
 	status = _status;
-	//qDebug() << "Status:" << status;
 	update();
+}
+
+void Mine::setDebugMode(bool enable) {
+	enable_debug_mode = enable;
 }
 
 bool Mine::isNumber() const {
@@ -55,39 +52,22 @@ void Mine::paintEvent(QPaintEvent*) {
 
 	auto rc = rect();
 
-	//if (downed) {
-		//painter.fillRect(0, 0, width() - 1, height() - 1, Qt::lightGray);
-	//}
-
 	if (isNumber()) {
-		static QString path_table[] = {
-			"",
-			":/Resources/Resources/imgs/num1.png",
-			":/Resources/Resources/imgs/num2.png",
-			":/Resources/Resources/imgs/num3.png",
-			":/Resources/Resources/imgs/num4.png",
-			":/Resources/Resources/imgs/num5.png",
-			":/Resources/Resources/imgs/num6.png",
-			":/Resources/Resources/imgs/num7.png",
-			":/Resources/Resources/imgs/num8.png",
-		};
-		painter.drawPixmap(rc,
-			QPixmap(path_table[status]));
+		painter.drawPixmap(rc, ResourceManager::get().getStatusImage(status));
 	} else if (status == STATUS_FLAG) {
-		if (flag_img.isNull()) {
-			flag_img = QPixmap(":/Resources/Resources/imgs/flag.png");
-		}
-		painter.drawPixmap(rc, flag_img);
-	} else if (status == STATUS_BOMB) {
-		painter.drawPixmap(rc, mine_img);
+		painter.drawPixmap(rc, ResourceManager::get().getStatusImage(STATUS_FLAG));
+	} else if (status == STATUS_BOMB) {		
+		painter.drawPixmap(rc, ResourceManager::get().getStatusImage(STATUS_BOMB));
 	} else if (status == STATUS_BANK) {
-		painter.drawPixmap(rc, QPixmap(":/Resources/Resources/imgs/bank.png"));
+		painter.drawPixmap(rc, ResourceManager::get().getStatusImage(STATUS_BANK));
 	} else if (status == STATUS_INIT) {
-		painter.drawPixmap(rc, QPixmap(":/Resources/Resources/imgs/init.png"));
+		painter.drawPixmap(rc, ResourceManager::get().getStatusImage(STATUS_INIT));
 	}
 
-	//painter.setPen(QPen(QBrush(Qt::gray), 1));
-	//painter.drawRoundRect(0, 0, width() - 1, height() - 1, 2, 2);	
+	if (enable_debug_mode && isBomb()) {
+		painter.setPen(QPen(QBrush(Qt::red), 1));
+		painter.drawRoundRect(0, 0, width() - 1, height() - 1, 2, 2);
+	}
 }
 
 void Mine::mousePressEvent(QMouseEvent* event) {
@@ -97,12 +77,24 @@ void Mine::mousePressEvent(QMouseEvent* event) {
 	else if (event->button() == Qt::RightButton) {
 		if (status == STATUS_INIT) {
 			setStatus(STATUS_FLAG);
-			emit setFlag();
+			emit setFlag(true);
 		}
 		else if (status == STATUS_FLAG) {
 			setStatus(STATUS_INIT);
+			emit setFlag(false);
 		}
 	}
+}
+
+void Mine::fadeOut() {
+	auto eff = new QGraphicsOpacityEffect(this);
+	setGraphicsEffect(eff);
+	auto opacity = new QPropertyAnimation(eff, "opacity");
+	opacity->setDuration(150);
+	opacity->setStartValue(0);
+	opacity->setEndValue(1);
+	opacity->setEasingCurve(QEasingCurve::InQuart);
+	opacity->start(QPropertyAnimation::DeleteWhenStopped);
 }
 
 void Mine::setDowned(bool down) {
@@ -110,7 +102,8 @@ void Mine::setDowned(bool down) {
 		return;
 	}
 	downed = down;
-	if (is_mine) {
+	if (is_bomb) {
 		setStatus(STATUS_BOMB);
     }
+	fadeOut();	
 }

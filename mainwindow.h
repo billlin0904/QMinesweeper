@@ -19,6 +19,7 @@ public:
 private:
 	void setEnmoji(int i);
 
+	bool debug_mode;
 	QTimer timer;
 	QTime base_time;
 	QIcon enmoji0;

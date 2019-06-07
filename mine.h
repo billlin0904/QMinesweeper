@@ -3,21 +3,7 @@
 #include <QLabel>
 #include <QPixmap>
 
-enum MineStatus {
-	STATUS_BANK = 0,
-	STATUS_NUM1,
-	STATUS_NUM2,
-	STATUS_NUM3,
-	STATUS_NUM4,
-	STATUS_NUM5,
-	STATUS_NUM6,
-	STATUS_NUM7,
-	STATUS_NUM8,
-
-	STATUS_INIT,
-	STATUS_FLAG,
-	STATUS_BOMB,
-};
+#include "minestatus.h"
 
 class Mine : public QLabel {
 	Q_OBJECT
@@ -26,7 +12,7 @@ public:
 
 	void setDowned(bool down);
 
-	void setMine(bool _is_mine);
+	void setBomb(bool _is_bomb);
 
 	bool isDowned() const;
 
@@ -52,9 +38,13 @@ public:
 
 	void reset();
 
+	void setDebugMode(bool enable);
+
+	void fadeOut();
+
 signals:
 	void dug(int x, int y);
-	void setFlag();
+	void setFlag(bool is_set_flag);
 
 private:
 	void paintEvent(QPaintEvent*) override;
@@ -62,13 +52,12 @@ private:
 
 private:
 	bool downed;
-	bool is_mine;
+	bool is_bomb;
+	bool enable_debug_mode;
 	MineStatus near_mine_count;
 	int x;
 	int y;
 	MineStatus status;
-	QPixmap mine_img;
-	QPixmap flag_img;
 };
 
 inline MineStatus Mine::getStatus() const {
@@ -89,4 +78,8 @@ inline int Mine::getY() const {
 
 inline bool Mine::isFlag() const {
 	return status == STATUS_FLAG;
+}
+
+inline bool Mine::isBomb() const {
+	return is_bomb;
 }
