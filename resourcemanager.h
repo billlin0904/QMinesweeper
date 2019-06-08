@@ -18,16 +18,20 @@ public:
 		return rm;
 	}
 
-	QPixmap getStatusImage(MineStatus status) const;
+	QPixmap getStatusImage(MineStatus status);
 
-	void changeTheme(IconTheme theme) const;
+	QIcon getThemeIcon(IconTheme icon_theme) const;
+
+	void changeTheme(IconTheme change_theme);
+
+	IconTheme getIconTheme() const;
 
 private:
 	ResourceManager();
 
 	void addCache(const QString &url, MineStatus status) const;
 
-	void loadResource() const;
+	void loadResource();
 
 	IconTheme theme;
 	mutable QCache<MineStatus, QPixmap> cache;
