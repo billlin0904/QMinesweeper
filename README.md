@@ -14,6 +14,9 @@ https://www.un4seen.com/
 
 ![image](https://github.com/billlin0904/QMinesweeper/blob/master/demo.JPG)
 
+- Demo
+[linkname](https://youtu.be/1lxJpgCcST0)
+
 ### Todos
 
 - 上傳可供試玩的版本
