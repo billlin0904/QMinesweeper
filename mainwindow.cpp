@@ -47,6 +47,8 @@ MainWindow::MainWindow(QWidget* parent)
 			|| settings.height_count != ui->stage->getHeightCount()
 			|| settings.bomb_count != ui->stage->getBombCount()) {
 			ui->stage->create(settings.width_count, settings.height_count, settings.bomb_count);
+			ui->stage->setDebugMode(debug_mode);
+			ui->stage->setDisabled(false);
 		}
 		});
 	ui->menuBar->addAction(preferences_action);
