@@ -3,18 +3,26 @@
 #include <memory>
 #include <vector>
 #include <QUrl>
-#include <QObject>
 
-class SoundManager : public QObject {
-	Q_OBJECT
+enum SoundIndex {
+	BACKGROUND_MUSIC_INDEX = 0,
+	DUG_INDEX,
+	FLAG_INDEX,
+	GAME_OVER_INDEX,
+	GAME_WIN_INDEX,
+};
+
+class SoundManager {
 public:
-    explicit SoundManager(QObject* parent = nullptr);
-
+	static SoundManager& get() {
+		static SoundManager manager;
+		return manager;
+	}
+    
     ~SoundManager();
 
     void addSound(const QUrl& path, bool is_loop);
 
-public slots:
 	void play(int index);
 
     void setMuted(int index, bool status);
@@ -22,6 +30,8 @@ public slots:
     void setVolume(int index, int vol);
 
 private:
+	SoundManager();
+
     class SoundPlayer;
     std::vector<std::unique_ptr<SoundPlayer>> playlist;
 };

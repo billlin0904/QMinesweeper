@@ -8,8 +8,6 @@
 #include <libloaderapi.h>
 #endif
 
-#if 1
-
 #ifdef Q_OS_LINUX
 #define LOAD_SYMBOL(module, name) dlsym(module, name)
 #else
@@ -109,6 +107,7 @@ class SoundManager::SoundPlayer {
 public:
     explicit SoundPlayer(bool _is_loop)
         : is_loop(_is_loop)
+		, volume(0)
         , stream(0) {	
     }
 
@@ -129,12 +128,13 @@ public:
     }
 
     void setMuted(bool status) {
-		setVolume(status ? 0 : 100);
+		setVolume(status ? 0 : volume);
     }
 
     void setVolume(int vol) {
         if (stream != 0) {
             BassLib::get().BASS_ChannelSetAttribute(stream, BASS_ATTRIB_VOL, double(vol) / 100.0);
+			volume = vol;
         }
     }
 
@@ -162,12 +162,11 @@ public:
 	}
 private:
     bool is_loop;
+	int volume;
     HSTREAM stream;
 };
-#endif
 
-SoundManager::SoundManager(QObject* parent)
-    : QObject(parent) {
+SoundManager::SoundManager() {
     BasInit::get();
 }
 

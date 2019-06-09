@@ -23,6 +23,10 @@ void ResourceManager::loadResource() {
 	addCache(":/Resources/Resources/imgs/num8.png", STATUS_NUM8);
 }
 
+QPixmap ResourceManager::getBombIcon() const {
+	return QPixmap(":/Resources/Resources/imgs/mine.png").scaled(QSize(32, 32));
+}
+
 QIcon ResourceManager::getThemeIcon(IconTheme icon_theme) const {
 	const QSize icon_size(32, 32);
 	QIcon icon;

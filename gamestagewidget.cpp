@@ -1,27 +1,35 @@
 #include <QDebug>
+#include <QPropertyAnimation>
 #include <cassert>
 #include "rng.h"
+#include "settings.h"
 #include "gamestagewidget.h"
 
 GameStageWidget::GameStageWidget(QWidget* parent)
 	: QFrame(parent)
 	, N(0)
 	, M(0)
-	, max_mine(0)
+	, max_bomb(0)
 	, remain_mine(0)
 	, move(0) {
 	setStyleSheet("#stage { background-color: white; border: none; }");
-	//setStyleSheet("#stage { background-color: black; border: none; }");
 
-	sound_effect.addSound(QUrl::fromLocalFile("./Resources/sounds/bg.mp3"), true);
-	sound_effect.addSound(QUrl::fromLocalFile("./Resources/sounds/click.wav"), false);
-	sound_effect.addSound(QUrl::fromLocalFile("./Resources/sounds/flag.wav"), false);
-	sound_effect.addSound(QUrl::fromLocalFile("./Resources/sounds/gameover.mp3"), false);
-	sound_effect.addSound(QUrl::fromLocalFile("./Resources/sounds/gamewin.mp3"), false);
+	SoundManager::get().addSound(QUrl::fromLocalFile("./Resources/sounds/bg.mp3"), true);
+	SoundManager::get().addSound(QUrl::fromLocalFile("./Resources/sounds/click.wav"), false);
+	SoundManager::get().addSound(QUrl::fromLocalFile("./Resources/sounds/flag.wav"), false);
+	SoundManager::get().addSound(QUrl::fromLocalFile("./Resources/sounds/gameover.mp3"), false);
+	SoundManager::get().addSound(QUrl::fromLocalFile("./Resources/sounds/gamewin.mp3"), false);
+
+	SoundManager::get().setVolume(BACKGROUND_MUSIC_INDEX, Settings::get().background_music_volume);
+
+	SoundManager::get().setVolume(DUG_INDEX, Settings::get().effect_sound_volume);
+	SoundManager::get().setVolume(FLAG_INDEX, Settings::get().effect_sound_volume);
+	SoundManager::get().setVolume(GAME_OVER_INDEX, Settings::get().effect_sound_volume);
+	SoundManager::get().setVolume(GAME_WIN_INDEX, Settings::get().effect_sound_volume);
 }
 
 void GameStageWidget::restart() {
-	create(M, N, max_mine, false);
+	create(M, N, max_bomb, false);
 }
 
 void GameStageWidget::create(int _M, int _N, int _max_mine, bool reset_layout) {
@@ -36,8 +44,8 @@ void GameStageWidget::create(int _M, int _N, int _max_mine, bool reset_layout) {
 
 		N = _N;
 		M = _M;
-		max_mine = _max_mine;
-		remain_mine = max_mine;		
+		max_bomb = _max_mine;
+		remain_mine = max_bomb;		
 
 		for (auto x = 0; x < N; ++x) {
 			std::vector<std::unique_ptr<Mine>> temp;
@@ -46,7 +54,7 @@ void GameStageWidget::create(int _M, int _N, int _max_mine, bool reset_layout) {
 				temp.emplace_back(mine);
 				QObject::connect(mine, &Mine::dug, this, &GameStageWidget::onDug);
 				QObject::connect(mine, &Mine::setFlag, [this](auto is_set_flag) {
-					sound_effect.play(FLAG_INDEX);
+					SoundManager::get().play(FLAG_INDEX);
 					if (is_set_flag) {
 						emit mineCountChanged(--remain_mine);
 					}
@@ -73,15 +81,15 @@ void GameStageWidget::create(int _M, int _N, int _max_mine, bool reset_layout) {
 		}
 	}
 
-	remain_mine = max_mine;
+	remain_mine = max_bomb;
 	move = 0;
 	randomMine();
 	calcNearMineCount();
 
-	sound_effect.setVolume(BACKGROUND_MUSIC_INDEX, 10);
-	sound_effect.play(BACKGROUND_MUSIC_INDEX);
+	SoundManager::get().setVolume(BACKGROUND_MUSIC_INDEX, Settings::get().background_music_volume);
+	SoundManager::get().play(BACKGROUND_MUSIC_INDEX);
 
-	emit start(max_mine);
+	emit start(max_bomb);
 	emit mineCountChanged(remain_mine);
 }
 
@@ -129,7 +137,7 @@ static bool hasNearBomb(std::vector<const Mine*> &mines) {
 
 void GameStageWidget::dug(int x, int y, bool play_sound) {
 	if (play_sound) {
-		sound_effect.play(DUG_INDEX);
+		SoundManager::get().play(DUG_INDEX);
 	}	
 
 	if (move == 0 && play_sound) {
@@ -146,8 +154,8 @@ void GameStageWidget::dug(int x, int y, bool play_sound) {
 
 	if (mine->isBomb()) {
 		mine->setDowned(true);
-		sound_effect.play(GAME_OVER_INDEX);
-		sound_effect.setMuted(BACKGROUND_MUSIC_INDEX, true);
+		SoundManager::get().play(GAME_OVER_INDEX);
+		SoundManager::get().setMuted(BACKGROUND_MUSIC_INDEX, true);
 		showAll();
 		emit gameOver();
 		return;
@@ -167,9 +175,9 @@ void GameStageWidget::dug(int x, int y, bool play_sound) {
 
 	emit moveChanged(++move);
 
-	if (move == N * M - max_mine) {
-		sound_effect.play(GAME_WIN_INDEX);
-		sound_effect.setMuted(BACKGROUND_MUSIC_INDEX, true);
+	if (move == N * M - max_bomb) {
+		SoundManager::get().play(GAME_WIN_INDEX);
+		SoundManager::get().setMuted(BACKGROUND_MUSIC_INDEX, true);
 		emit gameWin();
 	}
 }
@@ -292,7 +300,7 @@ void GameStageWidget::randomMine(const std::vector<const Mine*>* skip_mine) {
 	else {
 		std::vector<bool> shuffle_bool(M * N);
 		for (size_t i = 0; i < shuffle_bool.size(); ++i) {
-			shuffle_bool[i] = i < max_mine;
+			shuffle_bool[i] = i < max_bomb;
 		}
 		random.shuffle(shuffle_bool.begin(), shuffle_bool.end());
 

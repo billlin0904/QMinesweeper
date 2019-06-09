@@ -6,88 +6,22 @@
 #include <QMessageBox>
 #include <QDesktopWidget>
 #include <QDir>
-
+#include "settings.h"
+#include "preferencesdialog.h"
 #include "resourcemanager.h"
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 
-#define DEBUG_MODE 0
-
 MainWindow::MainWindow(QWidget* parent)
 	: QMainWindow(parent)
 	, ui(new Ui::MainWindow)
-	, debug_mode(false)
-	, level(LEVE_BEGINER) {
+	, debug_mode(false) {
 	QApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
 	QApplication::setAttribute(Qt::AA_UseHighDpiPixmaps);
 
 	ui->setupUi(this);
 
-	setWindowTitle("QMinesweeper");
-
-	auto action1 = new QAction(tr("Beginer"), this);
-	QObject::connect(action1, &QAction::triggered, [this]() {
-		level = LEVE_BEGINER;
-		createGame();
-		});
-
-	auto action2 = new QAction(tr("Intermediate"), this);
-	QObject::connect(action2, &QAction::triggered, [this, action2]() {
-		level = LEVE_INTERMEDIATE;
-		createGame();
-		});
-
-	auto action3 = new QAction(tr("Export"), this);
-	QObject::connect(action3, &QAction::triggered, [this]() {
-		level = LEVE_EXPORT;
-		createGame();
-		});
-
-	auto level_menu = new QMenu(tr("New Game"));
-	level_menu->addAction(action1);
-	level_menu->addAction(action2);
-	level_menu->addAction(action3);
-
-	auto theme_menu = new QMenu(tr("Theme"));
-	auto theme1_action = new QAction(tr("theme 1"), this);
-	theme1_action->setIcon(ResourceManager::get().getThemeIcon(ICON_THEME1));
-	QObject::connect(theme1_action, &QAction::triggered, [this]() {
-		ResourceManager::get().changeTheme(ICON_THEME1);
-		ui->stage->fadeOut();
-		});
-	auto theme2_action = new QAction(tr("theme 2"), this);
-	theme2_action->setIcon(ResourceManager::get().getThemeIcon(ICON_THEME2));
-	QObject::connect(theme2_action, &QAction::triggered, [this]() {
-		ResourceManager::get().changeTheme(ICON_THEME2);
-		ui->stage->fadeOut();
-		});
-	auto theme3_action = new QAction(tr("theme 3"), this);
-	theme3_action->setIcon(ResourceManager::get().getThemeIcon(ICON_THEME3));
-	QObject::connect(theme3_action, &QAction::triggered, [this]() {
-		ResourceManager::get().changeTheme(ICON_THEME3);
-		ui->stage->fadeOut();
-		});
-	auto theme4_action = new QAction(tr("theme 4"), this);
-	theme4_action->setIcon(ResourceManager::get().getThemeIcon(ICON_THEME4));
-	QObject::connect(theme4_action, &QAction::triggered, [this]() {
-		ResourceManager::get().changeTheme(ICON_THEME4);
-		ui->stage->fadeOut();
-		});
-	theme_menu->addAction(theme1_action);
-	theme_menu->addAction(theme2_action);
-	theme_menu->addAction(theme3_action);
-	theme_menu->addAction(theme4_action);
-
-#if DEBUG_MODE
-	auto debug_mode_menu = new QMenu(tr("Debug mode"));
-	auto debug_mode_action = new QAction(tr("Enable"), this);
-	debug_mode_action->setCheckable(true);
-	QObject::connect(debug_mode_action, &QAction::triggered, [this, debug_mode_action]() {
-		debug_mode = debug_mode_action->isChecked();
-		ui->stage->setDebugMode(debug_mode);
-		});
-	debug_mode_menu->addAction(debug_mode_action);
-#endif
+	setWindowTitle("QMinesweeper");	
 
 	auto cheat_mode_enable = new QShortcut(this);
 	cheat_mode_enable->setKey(Qt::CTRL + Qt::Key_G);
@@ -104,11 +38,19 @@ MainWindow::MainWindow(QWidget* parent)
 		});
 	help_menu->addAction(about_action);
 
-	ui->menuBar->addAction(level_menu->menuAction());
-	ui->menuBar->addAction(theme_menu->menuAction());
-#if DEBUG_MODE
-	ui->menuBar->addAction(debug_mode_menu->menuAction());
-#endif
+	auto preferences_action = new QAction(tr("Preferences"), this);
+	QObject::connect(preferences_action, &QAction::triggered, [this]() {
+		PreferencesDialog dialog(this);
+		dialog.exec();
+		auto& settings = Settings::get();
+		if (settings.width_count != ui->stage->getWidthCount()
+			|| settings.height_count != ui->stage->getHeightCount()
+			|| settings.bomb_count != ui->stage->getBombCount()) {
+			ui->stage->create(settings.width_count, settings.height_count, settings.bomb_count);
+		}
+		});
+	ui->menuBar->addAction(preferences_action);
+
 	ui->menuBar->addAction(help_menu->menuAction());	
 
 	enmoji0 = QIcon(":/Resources/Resources/imgs/emoji_0.png");
@@ -181,49 +123,33 @@ MainWindow::MainWindow(QWidget* parent)
 }
 
 void MainWindow::loadSettings() {
-	const auto settings_path = "./QMinesweeper.ini";
-	QSettings settings(settings_path, QSettings::IniFormat);
-	settings.setIniCodec("UTF-8");
-	
-	auto theme = static_cast<IconTheme>(settings.value("/App/theme/", IconTheme::ICON_THEME1).toInt());
-	ResourceManager::get().changeTheme(theme);
-	level = static_cast<DifficultyLevels>(settings.value("/App/difficulty/",
-		DifficultyLevels::LEVE_BEGINER).toInt());
-
-	const QSize window_size(settings.value("/App/width/", 595).toInt(),
-		settings.value("/App/height/", 696).toInt());
-
 	setGeometry(
 		QStyle::alignedRect(
 			Qt::LeftToRight,
 			Qt::AlignCenter,
-			window_size,
+			Settings::get().window_size,
 			qApp->desktop()->availableGeometry()
 		)
 	);
 }
 
 void MainWindow::saveSettings() {
-	const auto settings_path = "./QMinesweeper.ini";
-	QSettings settings(settings_path, QSettings::IniFormat);
-	settings.setIniCodec("UTF-8");
-
-	settings.setValue("/App/theme/", ResourceManager::get().getIconTheme());
-	settings.setValue("/App/difficulty/", level);
-	settings.setValue("/App/width/", size().width());
-	settings.setValue("/App/height/", size().height());	
+	Settings::get().saveSettings(size());
 }
 
 void MainWindow::createGame() {
-	switch (level) {
-	case LEVE_BEGINER:
+	switch (Settings::get().level) {
+	case LEVEL_BEGINER:
 		ui->stage->create(8, 8, 10);
 		break;
-	case LEVE_INTERMEDIATE:
+	case LEVEL_INTERMEDIATE:
 		ui->stage->create(16, 16, 40);
 		break;
-	case LEVE_EXPORT:
+	case LEVEL_EXPORT:
 		ui->stage->create(30, 24, 99);
+		break;
+	case LEVEL_CUSTOM:
+		ui->stage->create(Settings::get().width_count, Settings::get().height_count, Settings::get().bomb_count);
 		break;
 	}
 	ui->stage->setDisabled(false);

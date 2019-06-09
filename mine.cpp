@@ -7,14 +7,14 @@
 #include "mine.h"
 
 Mine::Mine(int x, int y, QWidget* parent)
-	: QLabel(parent)
+	: QFrame(parent)
 	, downed(false)
 	, is_bomb(false)
 	, enable_debug_mode(false)
 	, near_mine_count(STATUS_BANK)
+	, status(STATUS_INIT)
 	, x(x)
-	, y(y)
-	, status(STATUS_INIT) {
+	, y(y) {
 	setFrameStyle(QFrame::NoFrame);
 	setObjectName("mine");
 }
@@ -86,15 +86,19 @@ void Mine::mousePressEvent(QMouseEvent* event) {
 	}
 }
 
-void Mine::fadeOut() {
+QPropertyAnimation* Mine::fadeOut(int duration, bool is_start) {
 	auto eff = new QGraphicsOpacityEffect(this);
 	setGraphicsEffect(eff);
+
 	auto opacity = new QPropertyAnimation(eff, "opacity");
-	opacity->setDuration(150);
+	opacity->setDuration(duration);
 	opacity->setStartValue(0);
 	opacity->setEndValue(1);
-	opacity->setEasingCurve(QEasingCurve::InQuart);
-	opacity->start(QPropertyAnimation::DeleteWhenStopped);
+	opacity->setEasingCurve(QEasingCurve::InOutExpo);
+	if (is_start) {
+		opacity->start(QPropertyAnimation::DeleteWhenStopped);
+	}
+	return opacity;
 }
 
 void Mine::setDowned(bool down) {

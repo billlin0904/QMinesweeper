@@ -26,6 +26,8 @@ public:
 
 	IconTheme getIconTheme() const;
 
+	QPixmap getBombIcon() const;
+
 private:
 	ResourceManager();
 

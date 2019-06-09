@@ -5,7 +5,9 @@
 
 #include "minestatus.h"
 
-class Mine : public QLabel {
+class QPropertyAnimation;
+
+class Mine : public QFrame {
 	Q_OBJECT
 public:
 	explicit Mine(int x, int y, QWidget* parent = nullptr);
@@ -40,7 +42,7 @@ public:
 
 	void setDebugMode(bool enable);
 
-	void fadeOut();
+	QPropertyAnimation* fadeOut(int duration = 150, bool is_start = true);
 
 signals:
 	void dug(int x, int y);
@@ -55,9 +57,9 @@ private:
 	bool is_bomb;
 	bool enable_debug_mode;
 	MineStatus near_mine_count;
-	int x;
-	int y;
 	MineStatus status;
+	int x;
+	int y;	
 };
 
 inline MineStatus Mine::getStatus() const {

@@ -13,14 +13,6 @@
 class GameStageWidget : public QFrame {
 	Q_OBJECT
 public:
-    enum SoundIndex {
-        BACKGROUND_MUSIC_INDEX = 0,
-        DUG_INDEX,
-        FLAG_INDEX,
-        GAME_OVER_INDEX,
-		GAME_WIN_INDEX,
-    };
-
 	explicit GameStageWidget(QWidget* parent = nullptr);
 
 	void restart();
@@ -28,13 +20,24 @@ public:
 	void create(int _M, int _N, int _max_mine, bool reset_layout = true);
 
 	int getMaxMine() const {
-		return max_mine;
+		return max_bomb;
 	}
 
 	void setDebugMode(bool enable);
 
 	void fadeOut();
 
+	int getHeightCount() const {
+		return N;
+	}
+
+	int getWidthCount() const {		
+		return M;
+	}
+
+	int getBombCount() const {
+		return max_bomb;
+	}
 signals:
 	void start(int max_mine);
 
@@ -65,10 +68,9 @@ private:
 
 	int N;
 	int M;
-	int max_mine;
+	int max_bomb;
 	int remain_mine;
 	int move;
-	SoundManager sound_effect;
 	std::unique_ptr<QGridLayout> layout;
 	std::vector<std::vector<std::unique_ptr<Mine>>> mines;
 };
