@@ -1,5 +1,5 @@
 #include <QSettings>
-#include "Settings.h"
+#include "settings.h"
 
 Settings::Settings() {
 	loadSettings();

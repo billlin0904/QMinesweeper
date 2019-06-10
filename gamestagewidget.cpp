@@ -53,7 +53,7 @@ void GameStageWidget::create(int _M, int _N, int _max_mine, bool reset_layout) {
 				auto mine = new Mine(x, y, this);
 				temp.emplace_back(mine);
 				QObject::connect(mine, &Mine::dug, this, &GameStageWidget::onDug);
-				QObject::connect(mine, &Mine::setFlag, [this](auto is_set_flag) {
+                QObject::connect(mine, &Mine::setFlag, [this](bool is_set_flag) {
 					SoundManager::get().play(FLAG_INDEX);
 					if (is_set_flag) {
 						emit mineCountChanged(--remain_mine);
@@ -260,7 +260,7 @@ void GameStageWidget::randomMine(const std::vector<const Mine*>* skip_mine) {
 		for (auto x = 0; x < N && !end_search; ++x) {
 			for (auto y = 0; y < M && !end_search; ++y) {
 				auto itr =
-					std::find_if(temp.begin(), temp.end(), [x, y](auto mine) {
+                    std::find_if(temp.begin(), temp.end(), [x, y](const Mine *mine) {
 					return mine->getX() == x && mine->getY() == y;
 						});
 				if (itr != temp.end()) {										

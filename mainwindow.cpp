@@ -38,6 +38,7 @@ MainWindow::MainWindow(QWidget* parent)
 		});
 	help_menu->addAction(about_action);
 
+    auto file_menu = new QMenu(tr("File"));
 	auto preferences_action = new QAction(tr("Preferences"), this);
 	QObject::connect(preferences_action, &QAction::triggered, [this]() {
 		PreferencesDialog dialog(this);
@@ -51,8 +52,9 @@ MainWindow::MainWindow(QWidget* parent)
 			ui->stage->setDisabled(false);
 		}
 		});
-	ui->menuBar->addAction(preferences_action);
+    file_menu->addAction(preferences_action);
 
+    ui->menuBar->addAction(file_menu->menuAction());
 	ui->menuBar->addAction(help_menu->menuAction());	
 
 	enmoji0 = QIcon(":/Resources/Resources/imgs/emoji_0.png");

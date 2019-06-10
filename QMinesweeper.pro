@@ -30,17 +30,24 @@ SOURCES += \
     gamestagewidget.cpp \
     rng.cpp \
     soundmanager.cpp \
-    mine.cpp
+    mine.cpp \
+    settings.cpp \
+    resourcemanager.cpp \
+    preferencesdialog.cpp
 
 HEADERS += \
         mainwindow.h \
     gamestagewidget.h \
     soundmanager.h \
     rng.h \
-    mine.h
+    mine.h \
+    settings.h \
+    resourcemanager.h \
+    preferencesdialog.h
 
 FORMS += \
-        mainwindow.ui
+        mainwindow.ui \
+        preferencesdialog.ui
 
 linux-g++* {
 LIBS += -ldl
